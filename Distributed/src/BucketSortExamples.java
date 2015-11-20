@@ -1,7 +1,7 @@
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class Bucket {
+public class BucketSortExamples {
 
 	public static final int numBuckets = 10;
 

@@ -15,7 +15,7 @@ public class Distributed {
 	static List<String> listOfAvailableHost;
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {
-		listOfAvailableHost = checkHosts("129.21.139");
+		listOfAvailableHost = checkHosts("129.21.139"); // in our case we have to add the subnet
 	}
 
 	public static ArrayList<String> checkHosts(String subnet) throws UnknownHostException, IOException {

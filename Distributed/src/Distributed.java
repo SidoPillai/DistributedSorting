@@ -5,9 +5,13 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 public class Distributed {
 
@@ -63,4 +67,21 @@ public class Distributed {
 	    }
 		return false;
 	}
+	
+	// remote copy
+	public void remoteCopy(String hostname) throws JSchException, IOException, SftpException {
+	    JSch js = new JSch();
+	    Session s = js.getSession(hostname);
+	    s.connect();
+
+	    Channel c = s.openChannel("sftp");
+	    ChannelSftp ce = (ChannelSftp) c;
+
+	    ce.connect();
+
+	    ce.put("/home/siddeshpillai/test.txt","test.txt");
+
+	    ce.disconnect();
+	    s.disconnect();    
+	  }
 }

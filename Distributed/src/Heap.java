@@ -8,6 +8,7 @@ public class Heap {
 	ArrayList<String> alist;
 	Pattern pattern;
 	Matcher match;
+	
 	public Heap(ArrayList<String> alist)
 	{
 		this.alist = alist;

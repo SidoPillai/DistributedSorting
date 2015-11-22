@@ -5,6 +5,14 @@ public class Address {
 	private int port;
 	private InetAddress address;
 	
+	Address(int port, InetAddress address) {
+		this.port = port;
+		this.address = address;
+	}
+	
+	public Address() {
+	}
+
 	public int getPort() {
 		return port;
 	}

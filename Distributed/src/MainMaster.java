@@ -1,8 +1,6 @@
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,7 +25,7 @@ public class MainMaster {
 	String subnet;
 
 	// To keep a track of which chunk is taken by which node
-	Map<MainMaster, Integer> map;
+	Map<String, Integer> map;
 
 	List<MainMaster> listOfConnectedSlaves; 
 
@@ -42,7 +40,7 @@ public class MainMaster {
 	List<List<String>> sortedChunks = new ArrayList<List<String>>();
 
 	public MainMaster() {
-		map = new HashMap<MainMaster, Integer>();
+		map = new HashMap<String, Integer>();
 	}
 
 	MainMaster(String subnet) {
@@ -59,7 +57,7 @@ public class MainMaster {
 		output = new ObjectOutputStream(socket.getOutputStream());
 	}
 
-	public void start() throws IOException {
+	public void start() throws IOException, ClassNotFoundException {
 
 		try{
 			serverSocket = new ServerSocket(port);
@@ -74,12 +72,11 @@ public class MainMaster {
 
 			// compile the slave class 
 			// the run these clients
-			int clientPort = 4000;
 
+			// Running the clients 
 			for (String host : listOfAvailableHost) {
-				//  Call the master
-				String[] arguments = new String[] { String.valueOf(port), String.valueOf(++clientPort)}; 
-				//				MainSlave.main(arguments);
+				//  Call the slaves
+				new MainSlave(serverSocket.getInetAddress().getHostAddress(), port).start();
 			}
 
 			// wait for the connection requests
@@ -90,7 +87,6 @@ public class MainMaster {
 				listOfConnectedSlaves.add(connection);
 				System.out.println("Node: " + (count+1) + " connected");
 			}
-
 
 			// Split the file based on the chunks
 			dataToSort = FileHandler.getData();
@@ -133,17 +129,20 @@ public class MainMaster {
 				// sending the data to slave
 				listOfConnectedSlaves.get(i).writeData((ArrayList<String>)chunks.get(i));
 				// keeping a map to keep track
-				map.put(listOfConnectedSlaves.get(i), i);
+				map.put(listOfConnectedSlaves.get(i).serverSocket.getInetAddress().getHostAddress(), i);
 			}
 
 			// Receive the response from the client
-
+			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
+				sortedChunks.add(readData());
+			}
+			
 			ArrayList<String> mergedSorted = (ArrayList<String>) merge(sortedChunks);
 						
 //			ArrayList<String> mergedSorted = (ArrayList<String>) merged(sortedChunks);
 
 			// write to file
-			writeFile(mergedSorted);
+			FileHandler.writeFile(mergedSorted);
 
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
@@ -157,6 +156,12 @@ public class MainMaster {
 	public void writeData(ArrayList<String> data) throws IOException{
 		output.writeObject(data.size());
 		output.flush();
+	}
+	
+	/* Sends list to worker node */
+	public ArrayList<String> readData() throws IOException, ClassNotFoundException {
+		ArrayList<String> sortedData = (ArrayList<String>) input.readObject();
+		return sortedData; 
 	}
 
 	// looks for the host in the network and adds inti the list of online devices 
@@ -213,6 +218,7 @@ public class MainMaster {
 		output.flush();
 	}
 
+	
 	public static <T extends Comparable<? super T>> List<T> merged(List<List<T>> lists) {
 		int totalSize = 0; // every element in the set
 		for (List<T> l : lists) {
@@ -285,15 +291,5 @@ public class MainMaster {
 			else return peekElem.compareTo(o.peekElem);
 		}
 	}
-
-	// write contents on the file
-	public static void writeFile(ArrayList<String> list) throws IOException {
-		PrintWriter pw = new PrintWriter(new FileWriter("out.txt"));
-
-		for (int i = 0; i < list.size(); i++) {
-			pw.write(list.get(i));
-		}
-
-		pw.close();
-	}
+	
 }

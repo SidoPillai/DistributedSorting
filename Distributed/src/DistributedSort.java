@@ -4,13 +4,11 @@ import java.util.Scanner;
 public class DistributedSort {
 
 	// start the program by providing the subnet
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		
 		System.out.println("Enter the Subnet");
 		Scanner sc = new Scanner(System.in);
 		String subnet = sc.next();
-		
 		new MainMaster(subnet).start();
-		
 	}
 }

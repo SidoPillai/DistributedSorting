@@ -15,7 +15,6 @@ public class MainSlave {
 	private int serverPort;
 	
 	ArrayList<String> inputList;
-	
 	ArrayList<String> sortedList;
 	
 	public MainSlave(String serverAddress, int serverPort) {

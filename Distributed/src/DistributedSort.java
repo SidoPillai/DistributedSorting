@@ -3,6 +3,7 @@ import java.util.Scanner;
 
 public class DistributedSort {
 
+	// start the program by providing the subnet
 	public static void main(String[] args) throws IOException {
 		
 		System.out.println("Enter the Subnet");

@@ -1,9 +1,11 @@
+package test;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -14,6 +16,8 @@ public class Master {
 	private Socket socket;
 	private DataInputStream input;
 	private DataOutputStream output;
+
+	ArrayList<Master> connections = new ArrayList<Master>();
 
 	/* Constructor that takes in Socket connecting to worker node */
 	public Master(Socket socket) {
@@ -77,13 +81,14 @@ public class Master {
 		input.readBoolean();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		int port;
 		int listSize;
 		int maxValue;
 		int nodeAmount;
 		ArrayList<Master> connections = new ArrayList<Master>();
+		List<String> toSort;
 
 
 		// Get connection information from the user
@@ -105,10 +110,44 @@ public class Master {
 				System.out.println("Node: " + (count+1) + " connected");
 			}
 			serverSocket.close();
-		}catch(IOException e){
+		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
 			return;
 		}
+
+		// Split the file based on the chunks
+		toSort = FileHandler.getData();
+
+		// Iterate on a loop on toSort based / #nodes
+		int count = 0;
+		List<String> send = new ArrayList<String>();
+
+		// calculate the last elements
+		int remainderStrings  = toSort.size()%nodeAmount;
+
+		for(int i = 0; i < toSort.size(); i++) {
+
+			if (toSort.size()/nodeAmount > count) {
+				if (remainderStrings > count) {
+					send.add(toSort.get(i));
+				} else {
+					send.add(toSort.get(i));
+				}
+				count++;
+			} else {
+
+				// send the list to slave
+				count = 0;
+				send.clear();
+			}
+
+		} 
+
+		if (remainderStrings != 0) {
+			// add the remainder strings in the another list
+			// send which is available first
+		}
+
 
 		// Get List information from the user.
 		System.out.println();
@@ -245,4 +284,6 @@ public class Master {
 			e.printStackTrace();
 		}
 	}
+
+
 }

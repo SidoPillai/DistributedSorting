@@ -1,6 +1,8 @@
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -137,9 +139,11 @@ public class MainMaster {
 			// Receive the response from the client
 
 			ArrayList<String> mergedSorted = (ArrayList<String>) merge(sortedChunks);
+						
+//			ArrayList<String> mergedSorted = (ArrayList<String>) merged(sortedChunks);
 
 			// write to file
-
+			writeFile(mergedSorted);
 
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
@@ -209,50 +213,87 @@ public class MainMaster {
 		output.flush();
 	}
 
-	public static <E extends Comparable<? super E>> List<E> merge(Collection<? extends List<? extends E>> lists) {
-	    PriorityQueue<CompIterator<E>> queue = new PriorityQueue<CompIterator<E>>();
-	    for (List<? extends E> list : lists)
-	        if (!list.isEmpty())
-	            queue.add(new CompIterator<E>(list.iterator()));
+	public static <T extends Comparable<? super T>> List<T> merged(List<List<T>> lists) {
+		int totalSize = 0; // every element in the set
+		for (List<T> l : lists) {
+			totalSize += l.size();
+		}
+		List<T> result = new ArrayList<T>(totalSize);
+		List<T> lowest;
 
-	    List<E> merged = new ArrayList<E>();
-	    while (!queue.isEmpty()) {
-	        CompIterator<E> next = queue.remove();
-	        merged.add(next.next());
-	        if (next.hasNext())
-	            queue.add(next);
-	    }
-	    return merged;
+		while (result.size() < totalSize) { // while we still have something to add
+			lowest = null;
+			for (List<T> l : lists) {
+				if (! l.isEmpty()) {
+					if (lowest == null) {
+						lowest = l;
+					}
+					else if (l.get(0).compareTo(lowest.get(0)) <= 0) {
+						lowest = l;
+					}
+				}
+			}
+			result.add(lowest.get(0));
+			lowest.remove(0);
+		}
+		return result;
+	}
+
+	public static <E extends Comparable<? super E>> List<E> merge(Collection<? extends List<? extends E>> lists) {
+		PriorityQueue<CompIterator<E>> queue = new PriorityQueue<CompIterator<E>>();
+		for (List<? extends E> list : lists)
+			if (!list.isEmpty())
+				queue.add(new CompIterator<E>(list.iterator()));
+
+		List<E> merged = new ArrayList<E>();
+		while (!queue.isEmpty()) {
+			CompIterator<E> next = queue.remove();
+			merged.add(next.next());
+			if (next.hasNext())
+				queue.add(next);
+		}
+		return merged;
 	}
 
 	private static class CompIterator<E extends Comparable<? super E>> implements Iterator<E>, Comparable<CompIterator<E>> {
-	    E peekElem;
-	    Iterator<? extends E> it;
+		E peekElem;
+		Iterator<? extends E> it;
 
-	    public CompIterator(Iterator<? extends E> it) {
-	        this.it = it;
-	        if (it.hasNext()) peekElem = it.next();
-	        else peekElem = null;
-	    }
+		public CompIterator(Iterator<? extends E> it) {
+			this.it = it;
+			if (it.hasNext()) peekElem = it.next();
+			else peekElem = null;
+		}
 
-	    public boolean hasNext() {
-	        return peekElem != null;
-	    }
+		public boolean hasNext() {
+			return peekElem != null;
+		}
 
-	    public E next() {
-	        E ret = peekElem;
-	        if (it.hasNext()) peekElem = it.next();
-	        else peekElem = null;
-	        return ret;
-	    }
+		public E next() {
+			E ret = peekElem;
+			if (it.hasNext()) peekElem = it.next();
+			else peekElem = null;
+			return ret;
+		}
 
-	    public void remove() {
-	        throw new UnsupportedOperationException();
-	    }
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
 
-	    public int compareTo(CompIterator<E> o) {
-	        if (peekElem == null) return 1;
-	        else return peekElem.compareTo(o.peekElem);
-	    }
+		public int compareTo(CompIterator<E> o) {
+			if (peekElem == null) return 1;
+			else return peekElem.compareTo(o.peekElem);
+		}
+	}
+
+	// write contents on the file
+	public static void writeFile(ArrayList<String> list) throws IOException {
+		PrintWriter pw = new PrintWriter(new FileWriter("out.txt"));
+
+		for (int i = 0; i < list.size(); i++) {
+			pw.write(list.get(i));
+		}
+
+		pw.close();
 	}
 }

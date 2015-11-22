@@ -1,3 +1,4 @@
+package test;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -20,6 +21,28 @@ public class Distributed {
 
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		listOfAvailableHost = checkHosts("129.21.139"); // in our case we have to add the subnet
+
+		// send the source files
+		for (String host : listOfAvailableHost) {
+			sendFiles(host);
+		}
+		
+		// compile
+		for (String host : listOfAvailableHost) {
+			
+		}
+
+		//  Call the master
+		String[] arguments = new String[] { "6000", String.valueOf(listOfAvailableHost.size())}; 
+		Master.main(arguments);
+		
+		// execute
+		for (String host : listOfAvailableHost) {
+			// Call the Slave
+			// execue - start the client
+			
+		}
+
 	}
 
 	// looks for the host in the network and adds inti the list of online devices 
@@ -49,7 +72,7 @@ public class Distributed {
 			session = jsch.getSession(hostname);
 			session.connect();
 			channel = (ChannelExec) session.openChannel("exec");                        
-			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
+			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
 			channel.connect();
 			return true;
 		} catch(Exception e){

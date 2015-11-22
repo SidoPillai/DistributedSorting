@@ -1,3 +1,4 @@
+package test;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -40,6 +41,9 @@ public class Slave {
 	private boolean sent = false;
 	private boolean out = false;
 
+	
+	
+	
 	/* Node constructor */
 	public Slave(int masterPort, String masterAddress, int port) {		
 		this.masterPort = masterPort;

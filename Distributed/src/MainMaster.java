@@ -1,6 +1,9 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,11 +26,14 @@ public class MainMaster {
 	final int port = 6000;
 	List<String> listOfAvailableHost;
 	String subnet;
+	static boolean flag = false;
 
 	// To keep a track of which chunk is taken by which node
 	Map<String, Integer> map;
 
 	List<MainMaster> listOfConnectedSlaves; 
+
+	List<Socket> listOfSlaves;
 
 	/* Connection variables to worker node */
 	private Socket socket;
@@ -41,6 +47,7 @@ public class MainMaster {
 
 	public MainMaster() {
 		map = new HashMap<String, Integer>();
+		listOfSlaves = new ArrayList<Socket>();
 	}
 
 	MainMaster(String subnet) {
@@ -62,42 +69,53 @@ public class MainMaster {
 		try{
 			serverSocket = new ServerSocket(port);
 
+			System.out.println("Master listening on port " + port);
 			// check for no of  host in the network
-			listOfAvailableHost = checkHosts(subnet);
+			//listOfAvailableHost = checkHosts(subnet);
 
 			// send the source files
-			for (String host : listOfAvailableHost) {
-				sendFiles(host);
-			}
+			//for (String host : listOfAvailableHost) {
+			//				sendFiles(host);
+			//			}
 
 			// compile the slave class 
 			// the run these clients
 
 			// Running the clients 
-			for (String host : listOfAvailableHost) {
-				//  Call the slaves
-				new MainSlave(serverSocket.getInetAddress().getHostAddress(), port).start();
-			}
+			//			for (String host : listOfAvailableHost) {
+			//  Call the slaves
+			//				new MainSlave(serverSocket.getInetAddress().getHostAddress(), port).start();
+			//			}
 
 			// wait for the connection requests
-			for(int count = 0; count < listOfAvailableHost.size(); ++count) {											
-				Socket socket = serverSocket.accept();	
-				MainMaster connection = new MainMaster(socket);		// New Connection object for easier communication
-				connection.setupConnection();						// Setup Connection to worker node
-				listOfConnectedSlaves.add(connection);
+			//			for(int count = 0; count < listOfAvailableHost.size(); ++count) {	
+
+			for(int count = 0; count < 3; ++count) {								
+				Socket socket = serverSocket.accept();
+				System.out.println("Accepted one node");
+				//				MainMaster connection = new MainMaster(socket);		// New Connection object for easier communication
+				//				connection.setupConnection();						// Setup Connection to worker node
+				//				listOfConnectedSlaves.add(connection);
+				new HandleTCPRequest(socket, count).start();
+				listOfSlaves.add(socket);
 				System.out.println("Node: " + (count+1) + " connected");
 			}
 
+			System.out.println("All nodes connected..");
+
+			System.out.println("Sending the data...");
 			// Split the file based on the chunks
 			dataToSort = FileHandler.getData();
+
+			System.out.println("Size of data.." + dataToSort.size());
 
 			// Iterate on a loop on toSort based / #nodes
 			int count = 0;
 
 			// calculate the last elements
-			int sizeForEachNode = dataToSort.size()/listOfConnectedSlaves.size();
+			int sizeForEachNode = dataToSort.size()/3; //listOfConnectedSlaves.size();
 
-			int totalChuncks = listOfConnectedSlaves.size();
+			int totalChuncks = 3; //listOfConnectedSlaves.size();
 			int j = 0;
 			List<String> elements = new ArrayList<String>();
 
@@ -110,7 +128,7 @@ public class MainMaster {
 				} 
 				// set the chunk
 				else if (count == sizeForEachNode && j < totalChuncks-1) {
-					chunks.set(j, elements);
+					chunks.add(j, elements);
 					j++;
 					count = 0;
 					elements.clear();
@@ -122,27 +140,58 @@ public class MainMaster {
 			}
 
 			// adding the last chunk
-			chunks.set(j, elements);
+			chunks.add(j, elements);
+
+			System.out.println("Data Prepared...");
+			
+			flag = true;
 
 			// Send the chunks to the client for sorting
-			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
+			//			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
+//			for (int i = 0; i < 3; i++) {
+
+//				Socket soc = listOfSlaves.get(i);
+//				output = new ObjectOutputStream(soc.getOutputStream());
+//				input = new ObjectInputStream(soc.getInputStream());
+
+//				output.writeObject((ArrayList<String>)chunks.get(i));
+
+				//				writeData((ArrayList<String>)chunks.get(i));
+
 				// sending the data to slave
-				listOfConnectedSlaves.get(i).writeData((ArrayList<String>)chunks.get(i));
+				//				listOfConnectedSlaves.get(i).writeData((ArrayList<String>)chunks.get(i));
 				// keeping a map to keep track
-				map.put(listOfConnectedSlaves.get(i).serverSocket.getInetAddress().getHostAddress(), i);
-			}
+				//				map.put(listOfConnectedSlaves.get(i).serverSocket.getInetAddress().getHostAddress(), i);
+//			}
+
 
 			// Receive the response from the client
-			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
-				sortedChunks.add(readData());
-			}
-			
-			ArrayList<String> mergedSorted = (ArrayList<String>) merge(sortedChunks);
-						
-//			ArrayList<String> mergedSorted = (ArrayList<String>) merged(sortedChunks);
+			//			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
+//			for (int i = 0; i < 3; i++) {
+//				sortedChunks.add(readData());
+//			}
 
+//			System.out.println("Received the data from the client");
+
+			ArrayList<String> mergedSorted = null;
+			
+			while (true) {
+				
+				System.out.println("Not there yet.. " + sortedChunks.size());
+				if (sortedChunks.size() == 3) {
+					mergedSorted = (ArrayList<String>) merge(sortedChunks);
+					System.out.println("Merged the data finally...");
+					break;
+				}
+			}
+
+			//			ArrayList<String> mergedSorted = (ArrayList<String>) merged(sortedChunks);
+
+			
 			// write to file
 			FileHandler.writeFile(mergedSorted);
+
+			System.out.println("Done");
 
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
@@ -157,7 +206,7 @@ public class MainMaster {
 		output.writeObject(data.size());
 		output.flush();
 	}
-	
+
 	/* Sends list to worker node */
 	public ArrayList<String> readData() throws IOException, ClassNotFoundException {
 		ArrayList<String> sortedData = (ArrayList<String>) input.readObject();
@@ -218,7 +267,7 @@ public class MainMaster {
 		output.flush();
 	}
 
-	
+
 	public static <T extends Comparable<? super T>> List<T> merged(List<List<T>> lists) {
 		int totalSize = 0; // every element in the set
 		for (List<T> l : lists) {
@@ -291,5 +340,87 @@ public class MainMaster {
 			else return peekElem.compareTo(o.peekElem);
 		}
 	}
-	
+
+	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		new MainMaster().start();
+	}
+
+	/**
+	 * This class is responsible to accept the TCP requests.
+	 * 
+	 * @author Siddesh Pillai
+	 */
+	private class HandleTCPRequest extends Thread {
+
+		// Member variables
+		private Socket serverSocketTCP;
+		private ObjectInputStream in;
+		private ObjectOutputStream out;
+		
+		int slaveNumber;
+
+		ArrayList<String> sortedData; 
+		/**
+		 * Constructor
+		 * @param socket
+		 */
+		public HandleTCPRequest(Socket socket, int slaveNumber) {
+			this.serverSocketTCP = socket;
+			this.slaveNumber = slaveNumber;
+			
+			try {
+				out = new ObjectOutputStream(this.serverSocketTCP.getOutputStream());
+				in = new ObjectInputStream(this.serverSocketTCP.getInputStream());
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		}
+
+		/**
+		 * The run method
+		 */
+		public void run() {
+
+			System.out.println("Waiting for the flag");
+			
+			try {
+
+				while(true) {
+					
+					System.out.println(MainMaster.flag + " is the flag value");
+					
+					if (MainMaster.flag) {
+
+						System.out.println("Time to send the data now");
+						// get the particular chunk
+						out.writeObject((ArrayList<String>)chunks.get(slaveNumber));
+						
+						System.out.println("Sent the chunks to the client");
+
+						sortedData = (ArrayList<String>) in.readObject();
+
+						System.out.println("Receieved the sorted data");
+						
+						synchronized (sortedChunks) {
+							sortedChunks.add(sortedData);
+						}
+						
+						System.out.println("Added to sorted data");
+						break;
+					}
+					
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					// closing the socket
+					this.serverSocketTCP.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 }

@@ -76,7 +76,7 @@ public class FileHandler {
 	}
 
 	public static ArrayList<String> getData() throws IOException {
-		File file = new File("new_dataset_10000.txt");
+		File file = new File("new_dataset_tiny.txt");
 		FileInputStream f = new FileInputStream(file);
 		int SIZE = (int)file.length();
 		byte[] barray = new byte[SIZE];
@@ -111,7 +111,7 @@ public class FileHandler {
 		PrintWriter pw = new PrintWriter(new FileWriter("out.txt"));
 
 		for (int i = 0; i < list.size(); i++) {
-			pw.write(list.get(i));
+			pw.write(list.get(i) + "\n");
 		}
 
 		pw.close();

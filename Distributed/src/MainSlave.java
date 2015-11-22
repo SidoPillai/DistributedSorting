@@ -23,22 +23,30 @@ public class MainSlave {
 	}
 	
 	public void setupConnection() throws IOException{
-		input = new ObjectInputStream(socket.getInputStream());
-		output = new ObjectOutputStream(socket.getOutputStream());
 	}
 	
 	public void start() throws ClassNotFoundException {
 
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			setupConnection();
+			
+			System.out.println("Connecting to server at " + serverAddress + " on port " + serverPort);
+//			setupConnection();
+			
+			input = new ObjectInputStream(this.socket.getInputStream());
+			output = new ObjectOutputStream(this.socket.getOutputStream());
 
+
+			System.out.println("Waiting for input");
 			// read the arraylist
 			inputList = (ArrayList<String>) input.readObject();
 			
+			System.out.println("Sorting the input...");
 			// sort the array list
 			heap = new Heap(inputList);
 			sortedList = heap.HeapSort();
+			
+			System.out.println("Sending the sorted list");
 			
 			// send the sorted list back to the server
 			output.writeObject(sortedList);
@@ -68,4 +76,7 @@ public class MainSlave {
 		output.flush();
 	}
 
+	public static void main(String[] args) throws ClassNotFoundException {
+		new MainSlave("localhost", 6000).start();
+	}
 }

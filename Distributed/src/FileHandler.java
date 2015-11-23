@@ -76,7 +76,7 @@ public class FileHandler {
 	}
 
 	public static ArrayList<String> getData() throws IOException {
-		File file = new File("new_dataset_tiny.txt");
+		File file = new File("new_dataset_10000.txt");
 		FileInputStream f = new FileInputStream(file);
 		int SIZE = (int)file.length();
 		byte[] barray = new byte[SIZE];
@@ -85,7 +85,7 @@ public class FileHandler {
 		int i = 0;
 
 		while(mb.hasRemaining()) {
-			barray[i]=mb.get();
+			barray[i] = mb.get();
 			i++;	
 		}
 
@@ -105,6 +105,26 @@ public class FileHandler {
 		//		}
 		return valToSort;
 	}
+	
+//	public static byte[] getFileParts(int start, int buffer) throws IOException {
+//		
+//		byte [] returnByte = new byte[end-start];
+//		
+//		RandomAccessFile aFile = new RandomAccessFile("new_dataset_1B.txt", "r");
+//		FileChannel ch = aFile.getChannel();
+//		MappedByteBuffer mb = ch.map(FileChannel.MapMode.READ_ONLY,0L, ch.size());
+//		mb.load();
+//		
+//		for (int i = 0; i < mb.limit(); i++) {
+//			returnByte[i] = mb.get();
+//        }
+//        
+//		mb.clear();
+//        ch.close();
+//        aFile.close();
+//
+//        return returnByte;
+//	}
 
 	// write contents on the file
 	public static void writeFile(ArrayList<String> list) throws IOException {

@@ -1,20 +1,28 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -35,6 +43,8 @@ public class MainMaster {
 
 	List<Socket> listOfSlaves;
 
+	List<Bucket> buckets;
+
 	/* Connection variables to worker node */
 	private Socket socket;
 	private ObjectInputStream input;
@@ -48,6 +58,7 @@ public class MainMaster {
 	public MainMaster() {
 		map = new HashMap<String, Integer>();
 		listOfSlaves = new ArrayList<Socket>();
+		buckets = new ArrayList<Bucket>();
 	}
 
 	MainMaster(String subnet) {
@@ -97,6 +108,7 @@ public class MainMaster {
 				//				connection.setupConnection();						// Setup Connection to worker node
 				//				listOfConnectedSlaves.add(connection);
 				new HandleTCPRequest(socket, count).start();
+				//				buckets.add(new Bucket(socket, startIndex, endIndex, chunkSize)); // recovery
 				listOfSlaves.add(socket);
 				System.out.println("Node: " + (count+1) + " connected");
 			}
@@ -104,10 +116,28 @@ public class MainMaster {
 			System.out.println("All nodes connected..");
 
 			System.out.println("Sending the data...");
+
+			File file = new File("new_dataset_1B.txt");
+			FileInputStream f = new FileInputStream(file);
+			int SIZE = (int)file.length();
+
+			int SIZE_CHUNKS = SIZE/3;
+			int SIZE_EACH_BLOCK = SIZE_CHUNKS/256;
+
+			System.out.println("File Size ..          " +  SIZE + " Bytes");
+			System.out.println("Size of each Chunks.. " + SIZE_CHUNKS + " Bytes");
+			System.out.println("No of Blocks..        " + 256);
+			System.out.println("Size of each Block..  " + SIZE_EACH_BLOCK + " Bytes");
+			System.out.println("Estimated block size" + estimateBestSizeOfBlocks(file));
+
+
+			//			byte[] getFileParts(int start, int end);
+
 			// Split the file based on the chunks
 			dataToSort = FileHandler.getData();
 
 			System.out.println("Size of data.." + dataToSort.size());
+
 
 			// Iterate on a loop on toSort based / #nodes
 			int count = 0;
@@ -143,40 +173,40 @@ public class MainMaster {
 			chunks.add(j, elements);
 
 			System.out.println("Data Prepared...");
-			
+
 			flag = true;
 
 			// Send the chunks to the client for sorting
 			//			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
-//			for (int i = 0; i < 3; i++) {
+			//			for (int i = 0; i < 3; i++) {
 
-//				Socket soc = listOfSlaves.get(i);
-//				output = new ObjectOutputStream(soc.getOutputStream());
-//				input = new ObjectInputStream(soc.getInputStream());
+			//				Socket soc = listOfSlaves.get(i);
+			//				output = new ObjectOutputStream(soc.getOutputStream());
+			//				input = new ObjectInputStream(soc.getInputStream());
 
-//				output.writeObject((ArrayList<String>)chunks.get(i));
+			//				output.writeObject((ArrayList<String>)chunks.get(i));
 
-				//				writeData((ArrayList<String>)chunks.get(i));
+			//				writeData((ArrayList<String>)chunks.get(i));
 
-				// sending the data to slave
-				//				listOfConnectedSlaves.get(i).writeData((ArrayList<String>)chunks.get(i));
-				// keeping a map to keep track
-				//				map.put(listOfConnectedSlaves.get(i).serverSocket.getInetAddress().getHostAddress(), i);
-//			}
+			// sending the data to slave
+			//				listOfConnectedSlaves.get(i).writeData((ArrayList<String>)chunks.get(i));
+			// keeping a map to keep track
+			//				map.put(listOfConnectedSlaves.get(i).serverSocket.getInetAddress().getHostAddress(), i);
+			//			}
 
 
 			// Receive the response from the client
 			//			for (int i = 0; i < listOfConnectedSlaves.size(); i++) {
-//			for (int i = 0; i < 3; i++) {
-//				sortedChunks.add(readData());
-//			}
+			//			for (int i = 0; i < 3; i++) {
+			//				sortedChunks.add(readData());
+			//			}
 
-//			System.out.println("Received the data from the client");
+			//			System.out.println("Received the data from the client");
 
 			ArrayList<String> mergedSorted = null;
-			
+
 			while (true) {
-				
+
 				System.out.println("Not there yet.. " + sortedChunks.size());
 				if (sortedChunks.size() == 3) {
 					mergedSorted = (ArrayList<String>) merge(sortedChunks);
@@ -187,7 +217,8 @@ public class MainMaster {
 
 			//			ArrayList<String> mergedSorted = (ArrayList<String>) merged(sortedChunks);
 
-			
+			//			mergedSorted.stream().sorted((str1,str2)-> )
+
 			// write to file
 			FileHandler.writeFile(mergedSorted);
 
@@ -337,7 +368,7 @@ public class MainMaster {
 
 		public int compareTo(CompIterator<E> o) {
 			if (peekElem == null) return 1;
-			else return peekElem.compareTo(o.peekElem);
+			else return peekElem.compareTo(o.peekElem);  
 		}
 	}
 
@@ -356,7 +387,7 @@ public class MainMaster {
 		private Socket serverSocketTCP;
 		private ObjectInputStream in;
 		private ObjectOutputStream out;
-		
+
 		int slaveNumber;
 
 		ArrayList<String> sortedData; 
@@ -367,7 +398,7 @@ public class MainMaster {
 		public HandleTCPRequest(Socket socket, int slaveNumber) {
 			this.serverSocketTCP = socket;
 			this.slaveNumber = slaveNumber;
-			
+
 			try {
 				out = new ObjectOutputStream(this.serverSocketTCP.getOutputStream());
 				in = new ObjectInputStream(this.serverSocketTCP.getInputStream());
@@ -382,33 +413,33 @@ public class MainMaster {
 		public void run() {
 
 			System.out.println("Waiting for the flag");
-			
+
 			try {
 
 				while(true) {
-					
-					System.out.println(MainMaster.flag + " is the flag value");
-					
+
+					//					System.out.println(MainMaster.flag + " is the flag value");
+
 					if (MainMaster.flag) {
 
 						System.out.println("Time to send the data now");
 						// get the particular chunk
 						out.writeObject((ArrayList<String>)chunks.get(slaveNumber));
-						
+
 						System.out.println("Sent the chunks to the client");
 
 						sortedData = (ArrayList<String>) in.readObject();
 
 						System.out.println("Receieved the sorted data");
-						
+
 						synchronized (sortedChunks) {
 							sortedChunks.add(sortedData);
 						}
-						
+
 						System.out.println("Added to sorted data");
 						break;
 					}
-					
+
 				}
 
 			} catch (Exception e) {
@@ -423,4 +454,198 @@ public class MainMaster {
 			}
 		}
 	}
+
+	/* Get the Small value between the two string */
+	public String getSmallVal(String a , String b ) {
+		Pattern pattern = Pattern.compile("[a-zA-Z]");
+		Matcher match;
+
+		match = pattern.matcher(a);
+		int count =0;
+		while(match.find()) {
+			count++;
+		}
+		String sa_1 = a.substring(0,count);
+		String sa_2 = a.substring(count);
+
+		match = pattern.matcher(b);
+		count = 0;
+		while(match.find()) {
+			count++;
+		}
+		String sb_1 = b.substring(0,count);
+		String sb_2 = b.substring(count);
+
+		int sa_int = Integer.parseInt(sa_2);
+		int sb_int = Integer.parseInt(sb_2);
+
+		if(sa_1.compareTo(sb_1) < 0) {
+			return a;
+		} else if (sa_1.compareTo(sb_1) > 0) {
+			return b;
+		} else {
+			if(sa_int < sb_int) {
+				return a;
+			} else {
+				return b;
+			}
+		}
+	}
+
+	// dividing the file into small blocks
+	public static long estimateBestSizeOfBlocks(File filetobesorted) {
+		long sizeoffile = filetobesorted.length();
+
+		// we don't want to open up much more than 1024 temporary files, better run
+		// out of memory first. (Even 1024 is stretching it.)
+		final int MAXTEMPFILES = 1024;
+		long blocksize = sizeoffile / MAXTEMPFILES ;
+
+		// on the other hand, we don't want to create many temporary files
+		// for naught. If blocksize is smaller than half the free memory, grow it.
+		long freemem = Runtime.getRuntime().freeMemory();
+		if( blocksize < freemem/2)
+			blocksize = freemem/2;
+		else {
+			if(blocksize >= freemem) 
+				System.err.println("We expect to run out of memory. ");
+		}
+		return blocksize;
+	}
+
+	// merging the sorted file
+	public int mergeSortedFiles(List<File> files, File outputfile, final Comparator<String> cmp) throws IOException {
+		PriorityQueue<BinaryFileBuffer> pq = new PriorityQueue<BinaryFileBuffer>(11, 
+				new Comparator<BinaryFileBuffer>() {
+
+			public int compare(BinaryFileBuffer i, BinaryFileBuffer j) {
+				return cmp.compare(i.peek(), j.peek());
+			}
+		});
+
+		for (File f : files) {
+			BinaryFileBuffer bfb = new BinaryFileBuffer(f);
+			pq.add(bfb);
+		}
+
+		BufferedWriter fbw = new BufferedWriter(new FileWriter(outputfile));
+		int rowcounter = 0;
+
+		try {
+			while(pq.size()>0) {
+				BinaryFileBuffer bfb = pq.poll();
+				String r = bfb.pop();
+				fbw.write(r);
+				fbw.newLine();
+				++rowcounter;
+				if(bfb.empty()) {
+					bfb.fbr.close();
+					bfb.originalfile.delete();// we don't need you anymore
+				} else {
+					pq.add(bfb); // add it back
+				}
+			}
+		} finally { 
+			fbw.close();
+			for(BinaryFileBuffer bfb : pq ) bfb.close();
+		}
+		return rowcounter;
+	}
+
+	public class BinaryFileBuffer {
+		public static final int BUFFERSIZE = 2048;
+		public BufferedReader fbr;
+		public File originalfile;
+		private String cache;
+		private boolean empty;
+
+		public BinaryFileBuffer(File f) throws IOException {
+			originalfile = f;
+			fbr = new BufferedReader(new FileReader(f), BUFFERSIZE);
+			reload();
+		}
+
+		public boolean empty() {
+			return empty;
+		}
+
+		private void reload() throws IOException {
+			try {
+				if((this.cache = fbr.readLine()) == null){
+					empty = true;
+					cache = null;
+				}
+				else{
+					empty = false;
+				}
+			} catch(EOFException oef) {
+				empty = true;
+				cache = null;
+			}
+		}
+
+		public void close() throws IOException {
+			fbr.close();
+		}
+
+
+		public String peek() {
+			if(empty()) return null;
+			return cache.toString();
+		}
+
+		public String pop() throws IOException {
+			String answer = peek();
+			reload();
+			return answer;
+		}
+	}
+
+	public List<File> sortInBatch(File file, Comparator<String> cmp) throws IOException {
+		List<File> files = new ArrayList<File>();
+		BufferedReader fbr = new BufferedReader(new FileReader(file));
+		long blocksize = estimateBestSizeOfBlocks(file);  // in bytes
+
+		try{
+			List<String> tmplist =  new ArrayList<String>();
+			String line = "";
+			try {
+				while(line != null) {
+					long currentblocksize = 0;// in bytes
+					while((currentblocksize < blocksize) 
+							&& ((line = fbr.readLine()) != null)) { // as long as you have 2MB
+						tmplist.add(line);
+						currentblocksize += line.length(); // 2 + 40; // java uses 16 bits per character + 40 bytes of overhead (estimated)
+					}
+					files.add(sortAndSave(tmplist,cmp));
+					tmplist.clear();
+				}
+			} catch(EOFException oef) {
+				if(tmplist.size()>0) {
+					files.add(sortAndSave(tmplist,cmp));
+					tmplist.clear();
+				}
+			}
+		} finally {
+			fbr.close();
+		}
+		return files;
+	}
+
+	public static File sortAndSave(List<String> tmplist, Comparator<String> cmp) throws IOException  {
+		Collections.sort(tmplist,cmp);  // 
+		File newtmpfile = File.createTempFile("sortInBatch", "flatfile");
+		newtmpfile.deleteOnExit();
+		BufferedWriter fbw = new BufferedWriter(new FileWriter(newtmpfile));
+		try {
+			for(String r : tmplist) {
+				fbw.write(r);
+				fbw.newLine();
+			}
+		} finally {
+			fbw.close();
+		}
+		return newtmpfile;
+	}
+
 }

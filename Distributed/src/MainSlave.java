@@ -27,13 +27,10 @@ public class MainSlave {
 
 		try {
 			socket = new Socket(serverAddress, serverPort);
-
 			System.out.println("Connecting to server at " + serverAddress + " on port " + serverPort);
-			//			setupConnection();
 
 			input = new ObjectInputStream(this.socket.getInputStream());
 			output = new ObjectOutputStream(this.socket.getOutputStream());
-
 
 			while(true) {
 				System.out.println("Waiting for input");
@@ -41,6 +38,7 @@ public class MainSlave {
 				inputList = (ArrayList<String>) input.readObject();
 
 				System.out.println("Sorting the input...");
+				
 				// sort the array list
 				heap = new Heap(inputList);
 				sortedList = heap.HeapSort();

@@ -30,19 +30,19 @@ import com.jcraft.jsch.Session;
 public class MainMaster {
 
 	ServerSocket serverSocket;
-	
+
 	// Port to listen from client
 	final int port = 6000;
-	
+
 	// list of available of host - stores IP
 	List<String> listOfAvailableHost;
-	
+
 	// Subnet for discovering the machines connected to the network
 	String subnet;
-	
+
 	// flag to indicate when to start sending to client
 	static boolean flag = false;
-	
+
 	// List of list of string which are set out to sort
 	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
 
@@ -86,7 +86,7 @@ public class MainMaster {
 			serverSocket = new ServerSocket(port);
 
 			System.out.println("Master listening on port " + port);
-			
+
 			// check for no of  host in the network
 			//listOfAvailableHost = checkHosts(subnet);
 
@@ -96,7 +96,7 @@ public class MainMaster {
 			//			}
 
 			// compile the slave class 
-			
+
 			// the run these clients
 
 			// Running the clients 
@@ -122,10 +122,11 @@ public class MainMaster {
 
 			File file = new File("new_dataset_1B.txt");
 			long noOfLines = countLines("new_dataset_1B.txt");
+			int noOfChunks = 10000;
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
-			System.out.println("Number of chunks " + 10000);
-			int chunksize = (int)noOfLines/10000;
+			System.out.println("Number of chunks " + noOfChunks);
+			int chunksize = (int)noOfLines/noOfChunks;
 			System.out.println("Size of each chunk " + chunksize);
 
 			FileHandler handler = new FileHandler("new_dataset_1B.txt", chunksize);
@@ -133,13 +134,15 @@ public class MainMaster {
 			// Read data one by one
 			int i = 0;
 			while (true) {
-					synchronized(filestoSort) {
+				synchronized(filestoSort) {
+					if (i < noOfChunks) {
 						if(filestoSort.size() == 0) {
 							filestoSort.add(handler.read(i*chunksize, chunksize));
 							i++;
 							flag = true;
 						}
 					}
+				}
 			}
 
 		} catch(IOException e){
@@ -231,8 +234,6 @@ public class MainMaster {
 		@SuppressWarnings("unchecked")
 		public void run() {
 
-			System.out.println("Waiting for the flag");
-
 			try {
 
 				while(true) {
@@ -241,32 +242,45 @@ public class MainMaster {
 						System.out.println("Time to send the data now");
 						ArrayList<String> list = null;
 
-						synchronized (filestoSort) {
-							if (filestoSort.size() > 0) {
-								Iterator<ArrayList<String>> iter = filestoSort.iterator();
-								while (iter.hasNext()) {
-									list = iter.next();
-									iter.remove();							
-								}
-							}
-						}
-
 						try {
-							if(list!=null) {
-								out.writeObject(list);
-								System.out.println("Sent the chunks to the client");
-								sortedData = (ArrayList<String>) in.readObject();
-								System.out.println("Receieved the sorted data");
+							
+							synchronized (filestoSort) {
+								if (filestoSort.size() > 0) {
+									Iterator<ArrayList<String>> iter = filestoSort.iterator();
+
+									// removed from the list
+									while (iter.hasNext()) {
+										list = iter.next();
+										iter.remove();							
+									}
+
+									// technically list at this point should be be null.
+									// If its null means it has read all the content of the file
+									if(list != null) {
+
+										// sending the list out to sort
+										out.writeObject(list);
+										System.out.println("Sent the chunks to the client");
+									}
+								} 
 							}
+
+							// will wait for the sorted arraylist from the slaves
+							sortedData = (ArrayList<String>) in.readObject();
+							System.out.println("Receieved the sorted data");
+							
 						} catch(Exception e) {
+
+							// in case if an interupption occurs the load is handled here
 							sortedData = inPlaceSort(list);
 						}
 
+						// add the sorted data in the list of files
 						synchronized (files) {
 							files.add(manageSortedArrays(sortedData));
 						}
-						System.out.println("Added to sorted data");
 
+						System.out.println("Added to sorted data");
 						break;
 					}
 

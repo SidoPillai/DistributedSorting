@@ -41,7 +41,7 @@ public class MainMaster {
 	String subnet;
 
 	// flag to indicate when to start sending to client
-	static boolean flag = false;
+	static volatile boolean flag = false;
 
 	// List of list of string which are set out to sort
 	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
@@ -104,6 +104,7 @@ public class MainMaster {
 			// wait for the connection requests
 			//			for(int count = 0; count < listOfAvailableHost.size(); ++count) {	
 
+
 			for(int count = 0; count < 3; ++count) {								
 				Socket socket = serverSocket.accept();
 				System.out.println("Accepted one node");
@@ -113,12 +114,15 @@ public class MainMaster {
 			}
 
 			System.out.println("All nodes are now connected..");
+			
+			// start pinging once all the nodes are connected
+			new Ping().start();
 
 			System.out.println("Sending the data...");
 
 			File file = new File("new_dataset_1B.txt");
 			long noOfLines = countLines("new_dataset_1B.txt");
-			int noOfChunks = 10000;
+			int noOfChunks = 40000;
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
@@ -129,7 +133,9 @@ public class MainMaster {
 
 			// Read data one by one
 			int i = 0;
-			
+
+			System.out.println("Adding data to chunks");
+
 			while (true) {
 				synchronized(filestoSort) {
 					if (i < noOfChunks) {
@@ -137,6 +143,7 @@ public class MainMaster {
 							filestoSort.add(handler.read(i*chunksize, chunksize));
 							i++;
 							flag = true;
+							System.out.println("Added data to chunk");
 						}
 					}
 				}
@@ -240,7 +247,7 @@ public class MainMaster {
 						ArrayList<String> list = null;
 
 						try {
-							
+
 							synchronized (filestoSort) {
 								if (filestoSort.size() > 0) {
 									Iterator<ArrayList<String>> iter = filestoSort.iterator();
@@ -265,7 +272,7 @@ public class MainMaster {
 							// will wait for the sorted arraylist from the slaves
 							sortedData = (ArrayList<String>) in.readObject();
 							System.out.println("Receieved the sorted data");
-							
+
 						} catch(Exception e) {
 
 							// in case if an interupption occurs the load is handled here
@@ -278,7 +285,7 @@ public class MainMaster {
 						}
 
 						System.out.println("Added to sorted data");
-						break;
+						//						break;
 					}
 
 				}
@@ -302,6 +309,34 @@ public class MainMaster {
 		}
 	}
 
+	private class Ping extends Thread {
+
+		public void run() {
+
+			// iterate over the list and ping
+			while (true) {
+
+				try {
+					InetAddress inet;
+					if(listOfSlaves.size() > 0) {
+						for (int i = 0; i < listOfSlaves.size(); i++) {
+							inet = listOfSlaves.get(i).getInetAddress();
+							System.out.println("Sending Ping Request to " + inet);
+							System.out.println(inet.isReachable(5000) ? "Host is reachable" : "Host is NOT reachable");
+						}
+					}
+					sleep(10000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
 	// dividing the file into small blocks
 	public static long estimateBestSizeOfBlocks(File filetobesorted) {
 		long sizeoffile = filetobesorted.length();

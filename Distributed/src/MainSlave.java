@@ -34,6 +34,7 @@ public class MainSlave {
 
 			while(true) {
 				System.out.println("Waiting for input");
+				
 				// read the arraylist
 				inputList = (ArrayList<String>) input.readObject();
 
@@ -65,4 +66,5 @@ public class MainSlave {
 	public static void main(String[] args) throws ClassNotFoundException {
 		new MainSlave("localhost", 6000).start();
 	}
+	
 }

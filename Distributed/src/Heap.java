@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 public class Heap {
 
 	ArrayList<String> alist;
-	Pattern pattern;
-	Matcher match;
+	static Pattern pattern;
+	static Matcher match;
 
 	public Heap(ArrayList<String> alist) {
 		this.alist = alist;
@@ -14,13 +14,13 @@ public class Heap {
 	}
 
 	/* Get the Small value between the two string */
-	public String getSmallVal(String a , String b ) {
+	public static String getSmallVal(String a , String b ) {
 		match = pattern.matcher(a);
 		int count =0;
 		while(match.find()) {
 			count++;
 		}
-		String sa_1 = a.substring(0,count);
+		String sa_1 = a.substring(0, count);
 		String sa_2 = a.substring(count);
 
 		match = pattern.matcher(b);
@@ -28,7 +28,7 @@ public class Heap {
 		while(match.find()) {
 			count++;
 		}
-		String sb_1 = b.substring(0,count);
+		String sb_1 = b.substring(0, count);
 		String sb_2 = b.substring(count);
 
 		int sa_int = Integer.parseInt(sa_2);
@@ -43,6 +43,43 @@ public class Heap {
 				return a;
 			} else {
 				return b;
+			}
+		}
+	}
+	
+	
+	/* Get the Small value between the two string */
+	public static int myComparator(String a , String b) {
+		match = pattern.matcher(a);
+		int count =0;
+		while(match.find()) {
+			count++;
+		}
+		String sa_1 = a.substring(0, count);
+		String sa_2 = a.substring(count);
+
+		match = pattern.matcher(b);
+		count = 0;
+		while(match.find()) {
+			count++;
+		}
+		String sb_1 = b.substring(0, count);
+		String sb_2 = b.substring(count);
+
+		int sa_int = Integer.parseInt(sa_2);
+		int sb_int = Integer.parseInt(sb_2);
+
+		if (sa_1.compareTo(sb_1) < 0) {
+			return -1;
+		} else if (sa_1.compareTo(sb_1) > 0) {
+			return 1;
+		} else {
+			if(sa_int < sb_int) {
+				return -1;
+			} else if(sa_int > sb_int){
+				return 1;
+			} else {
+				return 0;
 			}
 		}
 	}

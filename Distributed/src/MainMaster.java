@@ -128,15 +128,24 @@ public class MainMaster {
 			System.out.println("Size of each Chunks.. " + SIZE_CHUNKS + " Bytes");
 			System.out.println("No of Blocks..        " + 256);
 			System.out.println("Size of each Block..  " + SIZE_EACH_BLOCK + " Bytes");
-			System.out.println("Estimated block size" + estimateBestSizeOfBlocks(file));
+			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 
 
 			//			byte[] getFileParts(int start, int end);
 
 			// Split the file based on the chunks
-			dataToSort = FileHandler.getData();
+			//			dataToSort = FileHandler.getData();
+			Comparator<String> comparator = new Comparator<String>() {
+				public int compare(String r1, String r2) {
+					return Heap.myComparator(r1, r2);
+				}
+			};
 
-			System.out.println("Size of data.." + dataToSort.size());
+			List<File> sortedFiles = sortInBatch(file, comparator);
+			mergeSortedFiles(sortedFiles, new File("outputfile.txt"), comparator);
+
+			//			System.out.println("Size of data.. " + dataToSort.size());
+
 
 
 			// Iterate on a loop on toSort based / #nodes
@@ -207,7 +216,7 @@ public class MainMaster {
 
 			while (true) {
 
-				System.out.println("Not there yet.. " + sortedChunks.size());
+				//				System.out.println("Not there yet.. " + sortedChunks.size());
 				if (sortedChunks.size() == 3) {
 					mergedSorted = (ArrayList<String>) merge(sortedChunks);
 					System.out.println("Merged the data finally...");
@@ -515,8 +524,8 @@ public class MainMaster {
 
 	// merging the sorted file
 	public int mergeSortedFiles(List<File> files, File outputfile, final Comparator<String> cmp) throws IOException {
-		PriorityQueue<BinaryFileBuffer> pq = new PriorityQueue<BinaryFileBuffer>(11, 
-				new Comparator<BinaryFileBuffer>() {
+
+		PriorityQueue<BinaryFileBuffer> pq = new PriorityQueue<BinaryFileBuffer>(11, new Comparator<BinaryFileBuffer>() {
 
 			public int compare(BinaryFileBuffer i, BinaryFileBuffer j) {
 				return cmp.compare(i.peek(), j.peek());
@@ -532,15 +541,16 @@ public class MainMaster {
 		int rowcounter = 0;
 
 		try {
-			while(pq.size()>0) {
+			while(pq.size() > 0) {
 				BinaryFileBuffer bfb = pq.poll();
 				String r = bfb.pop();
 				fbw.write(r);
 				fbw.newLine();
 				++rowcounter;
+
 				if(bfb.empty()) {
 					bfb.fbr.close();
-					bfb.originalfile.delete();// we don't need you anymore
+					bfb.originalfile.delete(); // we don't need you anymore
 				} else {
 					pq.add(bfb); // add it back
 				}
@@ -601,6 +611,7 @@ public class MainMaster {
 		}
 	}
 
+	// our main implementation 
 	public List<File> sortInBatch(File file, Comparator<String> cmp) throws IOException {
 		List<File> files = new ArrayList<File>();
 		BufferedReader fbr = new BufferedReader(new FileReader(file));
@@ -609,9 +620,11 @@ public class MainMaster {
 		try{
 			List<String> tmplist =  new ArrayList<String>();
 			String line = "";
+
 			try {
 				while(line != null) {
 					long currentblocksize = 0;// in bytes
+
 					while((currentblocksize < blocksize) 
 							&& ((line = fbr.readLine()) != null)) { // as long as you have 2MB
 						tmplist.add(line);

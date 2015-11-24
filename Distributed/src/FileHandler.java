@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
@@ -13,7 +12,6 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -75,7 +73,6 @@ public class FileHandler {
 	 */
 	ArrayList<String> read(int startIndex, int buff_size) throws IOException {
 		ArrayList<String> list = new ArrayList<String>();
-		String str;
 		BufferedReader br = new BufferedReader(new InputStreamReader(ios));
 		
 		for(int i = 0; i < startIndex; ++i) {
@@ -132,35 +129,11 @@ public class FileHandler {
 		while (s.hasNext()) {
 			valToSort.add(s.next());
 		}
-
-		//		Heap heap = new Heap(valToSort);
-		//		heap.HeapSort();
-		//		for(int i1 = 1 ; i1 < valToSort.size(); i1++)
-		//		{
-		//			System.out.println(valToSort.get(i1));
-		//		}
+		
+		s.close();
+		f.close();
 		return valToSort;
 	}
-
-	//	public static byte[] getFileParts(int start, int buffer) throws IOException {
-	//		
-	//		byte [] returnByte = new byte[end-start];
-	//		
-	//		RandomAccessFile aFile = new RandomAccessFile("new_dataset_1B.txt", "r");
-	//		FileChannel ch = aFile.getChannel();
-	//		MappedByteBuffer mb = ch.map(FileChannel.MapMode.READ_ONLY,0L, ch.size());
-	//		mb.load();
-	//		
-	//		for (int i = 0; i < mb.limit(); i++) {
-	//			returnByte[i] = mb.get();
-	//        }
-	//        
-	//		mb.clear();
-	//        ch.close();
-	//        aFile.close();
-	//
-	//        return returnByte;
-	//	}
 
 	// write contents on the file
 	public static void writeFile(ArrayList<String> list) throws IOException {
@@ -169,9 +142,7 @@ public class FileHandler {
 		for (int i = 0; i < list.size(); i++) {
 			pw.write(list.get(i) + "\n");
 		}
-
 		pw.close();
 	}
-
 
 }

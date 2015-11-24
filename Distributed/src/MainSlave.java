@@ -13,44 +13,44 @@ public class MainSlave {
 	private Heap heap;
 	private String serverAddress;
 	private int serverPort;
-	
+
 	ArrayList<String> inputList;
 	ArrayList<String> sortedList;
-	
+
 	public MainSlave(String serverAddress, int serverPort) {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 	}
-	
-	public void setupConnection() throws IOException{
-	}
-	
+
+	@SuppressWarnings("unchecked")
 	public void start() throws ClassNotFoundException {
 
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			
+
 			System.out.println("Connecting to server at " + serverAddress + " on port " + serverPort);
-//			setupConnection();
-			
+			//			setupConnection();
+
 			input = new ObjectInputStream(this.socket.getInputStream());
 			output = new ObjectOutputStream(this.socket.getOutputStream());
 
 
-			System.out.println("Waiting for input");
-			// read the arraylist
-			inputList = (ArrayList<String>) input.readObject();
-			
-			System.out.println("Sorting the input...");
-			// sort the array list
-			heap = new Heap(inputList);
-			sortedList = heap.HeapSort();
-			
-			System.out.println("Sending the sorted list");
-			
-			// send the sorted list back to the server
-			output.writeObject(sortedList);
-			
+			while(true) {
+				System.out.println("Waiting for input");
+				// read the arraylist
+				inputList = (ArrayList<String>) input.readObject();
+
+				System.out.println("Sorting the input...");
+				// sort the array list
+				heap = new Heap(inputList);
+				sortedList = heap.HeapSort();
+
+				System.out.println("Sending the sorted list");
+
+				// send the sorted list back to the server
+				output.writeObject(sortedList);
+			}
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -62,18 +62,6 @@ public class MainSlave {
 				e.printStackTrace();
 			}
 		}
-	}
-	
-	
-	/* Read boolean from inputstream */
-	public void readBoolean() throws IOException {
-		input.readBoolean();
-	}
-	
-	/* Send boolean to worker node */
-	public void writeBoolean() throws IOException{
-		output.writeBoolean(true);
-		output.flush();
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException {

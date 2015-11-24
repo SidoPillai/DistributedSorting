@@ -10,5 +10,6 @@ public class DistributedSort {
 		Scanner sc = new Scanner(System.in);
 		String subnet = sc.next();
 		new MainMaster(subnet).start();
+		sc.close();
 	}
 }

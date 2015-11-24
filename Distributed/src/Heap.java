@@ -16,10 +16,11 @@ public class Heap {
 	/* Get the Small value between the two string */
 	public static String getSmallVal(String a , String b ) {
 		match = pattern.matcher(a);
-		int count =0;
+		int count = 0;
 		while(match.find()) {
 			count++;
 		}
+		
 		String sa_1 = a.substring(0, count);
 		String sa_2 = a.substring(count);
 
@@ -28,6 +29,7 @@ public class Heap {
 		while(match.find()) {
 			count++;
 		}
+		
 		String sb_1 = b.substring(0, count);
 		String sb_2 = b.substring(count);
 
@@ -51,7 +53,8 @@ public class Heap {
 	/* Get the Small value between the two string */
 	public static int myComparator(String a , String b) {
 		match = pattern.matcher(a);
-		int count =0;
+		int count = 0;
+		
 		while(match.find()) {
 			count++;
 		}
@@ -127,7 +130,7 @@ public class Heap {
 		if (2*i > length && (2*i+1) > length ) {
 			return ;
 		} else {
-			String smallVal=null;
+			String smallVal = null;
 			int leftindex = 2*i ;
 			int rightindex = 2*i + 1;
 			String leftVal;
@@ -190,7 +193,7 @@ public class Heap {
 		int counter = 1;
 		int length = alist.size();
 
-		for (int i = length/2; i>=1; i--) {
+		for (int i = length/2; i >= 1; i--) {
 			Heapify(i,length-1);
 		}
 		
@@ -201,7 +204,6 @@ public class Heap {
 			index = length-counter;
 			temp = alist.get(1);
 			temp2  = alist.get(index);
-			//alist.set(length-counter, temp);
 			alist.set(1,temp2);
 			alist.set(index,temp);
 			Heapify(1,length-(i+1)); // Deleting the end nodes.

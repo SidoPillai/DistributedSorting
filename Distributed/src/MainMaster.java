@@ -52,9 +52,6 @@ public class MainMaster {
 	// Keeping a track of slaves which are online
 	List<Socket> listOfSlaves;
 
-	// list of buckets
-	List<Bucket> buckets;
-
 	// List of sorted files
 	List<File> files = new ArrayList<File>();
 
@@ -73,7 +70,6 @@ public class MainMaster {
 	public MainMaster() {
 		map = new HashMap<String, Integer>();
 		listOfSlaves = new ArrayList<Socket>();
-		buckets = new ArrayList<Bucket>();
 	}
 
 	MainMaster(String subnet) {
@@ -133,6 +129,7 @@ public class MainMaster {
 
 			// Read data one by one
 			int i = 0;
+			
 			while (true) {
 				synchronized(filestoSort) {
 					if (i < noOfChunks) {

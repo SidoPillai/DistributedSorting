@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -6,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
@@ -21,8 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -35,6 +35,7 @@ public class MainMaster {
 	List<String> listOfAvailableHost;
 	String subnet;
 	static boolean flag = false;
+	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
 
 	// To keep a track of which chunk is taken by which node
 	Map<String, Integer> map;
@@ -44,6 +45,15 @@ public class MainMaster {
 	List<Socket> listOfSlaves;
 
 	List<Bucket> buckets;
+
+	List<File> files = new ArrayList<File>();
+
+	Comparator<String> comparator = new Comparator<String>() {
+		public int compare(String r1, String r2) {
+			return Heap.myComparator(r1, r2);
+		}
+	};
+
 
 	/* Connection variables to worker node */
 	private Socket socket;
@@ -118,28 +128,32 @@ public class MainMaster {
 			System.out.println("Sending the data...");
 
 			File file = new File("new_dataset_1B.txt");
-			FileInputStream f = new FileInputStream(file);
-			int SIZE = (int)file.length();
-
-			int SIZE_CHUNKS = SIZE/3;
-			int SIZE_EACH_BLOCK = SIZE_CHUNKS/256;
-
-			System.out.println("File Size ..          " +  SIZE + " Bytes");
-			System.out.println("Size of each Chunks.. " + SIZE_CHUNKS + " Bytes");
-			System.out.println("No of Blocks..        " + 256);
-			System.out.println("Size of each Block..  " + SIZE_EACH_BLOCK + " Bytes");
+			long noOfLines = countLines("new_dataset_1B.txt");
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
+			System.out.println("Number of lines in the file " + noOfLines);
+			System.out.println("Number of chunks " + 10000);
+			int chunksize = (int)noOfLines/10000;
+			System.out.println("Size of each chunk " + chunksize);
 
+			FileHandler handler = new FileHandler("new_dataset_1B.txt", chunksize);
 
-			//			byte[] getFileParts(int start, int end);
+			for (int i = 0; i < chunksize; i++) {
+				synchronized (filestoSort) {
+					filestoSort.add(handler.read(i*chunksize, chunksize));
+				}
+			}
 
 			// Split the file based on the chunks
 			//			dataToSort = FileHandler.getData();
-			Comparator<String> comparator = new Comparator<String>() {
-				public int compare(String r1, String r2) {
-					return Heap.myComparator(r1, r2);
-				}
-			};
+
+			//			for (int i = 0)
+
+
+
+
+
+
+
 
 			List<File> sortedFiles = sortInBatch(file, comparator);
 			mergeSortedFiles(sortedFiles, new File("outputfile.txt"), comparator);
@@ -427,25 +441,36 @@ public class MainMaster {
 
 				while(true) {
 
-					//					System.out.println(MainMaster.flag + " is the flag value");
-
 					if (MainMaster.flag) {
-
 						System.out.println("Time to send the data now");
-						// get the particular chunk
-						out.writeObject((ArrayList<String>)chunks.get(slaveNumber));
+						ArrayList<String> list = null;
 
-						System.out.println("Sent the chunks to the client");
-
-						sortedData = (ArrayList<String>) in.readObject();
-
-						System.out.println("Receieved the sorted data");
-
-						synchronized (sortedChunks) {
-							sortedChunks.add(sortedData);
+						synchronized (filestoSort) {
+							if (filestoSort.size() > 0) {
+								Iterator<ArrayList<String>> iter = filestoSort.iterator();
+								while (iter.hasNext()) {
+									list = iter.next();
+									iter.remove();							
+								}
+							}
 						}
 
+						try {
+							if(list!=null) {
+								out.writeObject(list);
+								System.out.println("Sent the chunks to the client");
+								sortedData = (ArrayList<String>) in.readObject();
+								System.out.println("Receieved the sorted data");
+							}
+						} catch(Exception e) {
+							sortedData = inPlaceSort(list);
+						}
+
+						synchronized (files) {
+							files.add(manageSortedArrays(sortedData));
+						}
 						System.out.println("Added to sorted data");
+
 						break;
 					}
 
@@ -462,42 +487,11 @@ public class MainMaster {
 				}
 			}
 		}
-	}
 
-	/* Get the Small value between the two string */
-	public String getSmallVal(String a , String b ) {
-		Pattern pattern = Pattern.compile("[a-zA-Z]");
-		Matcher match;
-
-		match = pattern.matcher(a);
-		int count =0;
-		while(match.find()) {
-			count++;
-		}
-		String sa_1 = a.substring(0,count);
-		String sa_2 = a.substring(count);
-
-		match = pattern.matcher(b);
-		count = 0;
-		while(match.find()) {
-			count++;
-		}
-		String sb_1 = b.substring(0,count);
-		String sb_2 = b.substring(count);
-
-		int sa_int = Integer.parseInt(sa_2);
-		int sb_int = Integer.parseInt(sb_2);
-
-		if(sa_1.compareTo(sb_1) < 0) {
-			return a;
-		} else if (sa_1.compareTo(sb_1) > 0) {
-			return b;
-		} else {
-			if(sa_int < sb_int) {
-				return a;
-			} else {
-				return b;
-			}
+		// In-place sort if an exception occurs
+		private ArrayList<String> inPlaceSort(ArrayList<String> list) {
+			Collections.sort(list,comparator);
+			return list;
 		}
 	}
 
@@ -645,6 +639,7 @@ public class MainMaster {
 		return files;
 	}
 
+	
 	public static File sortAndSave(List<String> tmplist, Comparator<String> cmp) throws IOException  {
 		Collections.sort(tmplist,cmp);  // 
 		File newtmpfile = File.createTempFile("sortInBatch", "flatfile");
@@ -661,4 +656,44 @@ public class MainMaster {
 		return newtmpfile;
 	}
 
+	// count the number of lines in the file
+	public static int countLines(String filename) throws IOException {
+		InputStream is = new BufferedInputStream(new FileInputStream(filename));
+		try {
+			byte[] c = new byte[1024];
+			int count = 0;
+			int readChars = 0;
+			boolean empty = true;
+			while ((readChars = is.read(c)) != -1) {
+				empty = false;
+				for (int i = 0; i < readChars; ++i) {
+					if (c[i] == '\n') {
+						++count;
+					}
+				}
+			}
+			return (count == 0 && !empty) ? 1 : count;
+		} finally {
+			is.close();
+		}
+	}
+
+	// creates a file when an array is sorted
+	public File manageSortedArrays(ArrayList<String> sortedList) throws IOException {
+
+		File newtmpfile = File.createTempFile("sortInBatch", "flatfile");
+		newtmpfile.deleteOnExit();
+
+		BufferedWriter fbw = new BufferedWriter(new FileWriter(newtmpfile));
+
+		try {
+			for(String r : sortedList) {
+				fbw.write(r);
+				fbw.newLine();
+			}
+		} finally {
+			fbw.close();
+		}
+		return newtmpfile;
+	}
 }

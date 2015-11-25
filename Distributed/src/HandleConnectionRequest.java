@@ -20,6 +20,7 @@ public class HandleConnectionRequest extends Thread{
 	MainMaster master;
 
 	// main comparator for in-place sort
+	CustomComparator comp = new CustomComparator();
 
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String a, String b) {
@@ -193,7 +194,7 @@ public class HandleConnectionRequest extends Thread{
 
 	// In-place sort if an exception occurs
 	private ArrayList<String> inPlaceSort(ArrayList<String> list) {
-		Collections.sort(list, comparator);
+		Collections.sort(list, comp);
 		return list;
 	}
 

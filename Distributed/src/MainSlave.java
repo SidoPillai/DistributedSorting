@@ -21,6 +21,8 @@ public class MainSlave {
 	ArrayList<String> inputList;
 	ArrayList<String> sortedList;
 
+	CustomComparator comp = new CustomComparator();
+
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String a, String b) {
 			return a.compareTo(b);
@@ -132,7 +134,7 @@ public class MainSlave {
 				receivedData(inputList);
 				System.out.println("Sorting the input...");
 				
-				Collections.sort(inputList, comparator);
+				Collections.sort(inputList, comp);
 				// sort the array list
 //				heap = new Heap(inputList);
 //				sortedList = heap.HeapSort();

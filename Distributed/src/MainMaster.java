@@ -56,6 +56,8 @@ public class MainMaster {
 	// List of ConnectionHandlers
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
+	CustomComparator comp = new CustomComparator();
+	
 	// main comparator for in-place sort
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String a, String b) {
@@ -239,7 +241,7 @@ public class MainMaster {
 			// File Merging
 //			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
 			
-			mergeSort(files, new File("sid.txt"), comparator);
+			mergeSort(files, new File("sid.txt"), comp);
 			System.out.println("----------DONE----------");
 			
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");

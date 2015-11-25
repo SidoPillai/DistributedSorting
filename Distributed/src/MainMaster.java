@@ -52,7 +52,7 @@ public class MainMaster {
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
 	CustomComparator comp = new CustomComparator();
-	
+
 	// main comparator for in-place sort
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String a, String b) {
@@ -77,7 +77,7 @@ public class MainMaster {
 	public void start() throws IOException, ClassNotFoundException, InterruptedException {
 
 		try{
-			
+
 			long start = System.currentTimeMillis();
 			serverSocket = new ServerSocket(port);
 
@@ -85,30 +85,30 @@ public class MainMaster {
 
 			// Gets the IP from the file
 			readIP();
-			
+
 			// Establish connection with the clients
 			connect();
-			
+
 			// start pinging once all the nodes are connected
-			new Ping().start();
+//			new Ping().start();
 
-			System.out.println("Sending the data...");
+//			System.out.println("Sending the data...");
 
-			File file = new File("new_dataset_10000.txt");
 			long noOfLines = countLines("new_dataset_10000.txt");
-			int noOfChunks = 100;
+			int noOfChunks = 1000;
 			int chunksize = (int) noOfLines/noOfChunks;
-			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
+
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
 			System.out.println("Size of each chunk " + chunksize);
 
+			// handler to read line by line
 			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;
 
-			System.out.println("Adding data to chunks");
+//			System.out.println("Adding data to chunks");
 
 			int counter = 0;  // assign to slave
 			int limitToRead = 0;  // only read based on no. of chunks
@@ -122,7 +122,7 @@ public class MainMaster {
 						counter++;
 						i++;
 						limitToRead++;
-						System.out.println("Added data to chunk");
+//						System.out.println("Added data to chunk");
 					}
 					Thread.sleep(1);
 				} else if (limitToRead < noOfChunks) {
@@ -132,21 +132,23 @@ public class MainMaster {
 					break;
 				}
 			}
-			System.out.println("------MERGING FILE------");
+
+			System.out.println("------ MERGING SORTED FILEs ------");
 
 			Thread.sleep(5000);
-			
+
 			// File Merging
-//			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
-			
+			//			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
+
 			mergeSort(files, new File("output_10000.txt"), comp);
-			System.out.println("----------DONE----------");
-			
+
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
+			
 			// Done
+			System.out.println("-------------- DONE --------------");
 
 			System.exit(0);
-			
+
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
 			return;
@@ -159,13 +161,13 @@ public class MainMaster {
 
 		for (int count = 0; count < listOfAvailableHost.size(); count++) {								
 			Socket socket = serverSocket.accept();
-			System.out.println("Accepted one node");
+//			System.out.println("Accepted one node");
 			listOfSlaves.add(socket);
 			HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
 			listOfConnections.add(conn);
 			conn.start();
 			filestoSort.add(null);
-			System.out.println("Node: " + (count+1) + " connected");
+			System.out.println("Slave : " + (count+1) + " connected");
 		}
 
 		System.out.println("All nodes are now connected..");
@@ -174,18 +176,11 @@ public class MainMaster {
 	// Reads the IP from the file
 	private void readIP() throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader("check.txt"));
-		String currentLine;
-		
+
 		for (String line = br.readLine(); line != null; line = br.readLine()) {
-			System.out.println(line + "IP");
+			System.out.println("Pinging... " + line);
 			listOfAvailableHost.add(line);
 		}
-		
-//		while ((currentLine = br.readLine()) != null) {
-//			System.out.println(currentLine + "IP");
-//			listOfAvailableHost.add(currentLine);
-//		}
-		
 		br.close();
 	}
 
@@ -262,34 +257,36 @@ public class MainMaster {
 
 	public void mergeSort(List<File> inFiles, File outFile, Comparator<String> comparator) throws IOException  {
 
-	      try {
-	         BufferedReader[] readers = new BufferedReader[inFiles.size()];
-	         PrintWriter writer = new PrintWriter(outFile);
-	         TreeMap<String, Integer> treeMap = new TreeMap<String, Integer>(
-	               comparator);
+		PrintWriter writer = null;
 
-	         // read first line of each file. We don't check for EOF here, probably should
-	         for (int i = 0; i < inFiles.size(); i++) {
-	            readers[i] = new BufferedReader(new FileReader(inFiles.get(i)));
-	            String line = readers[i].readLine();
-	            treeMap.put(line, Integer.valueOf(i));
-	         }
+		try {
+			BufferedReader[] readers = new BufferedReader[inFiles.size()];
+			writer = new PrintWriter(outFile);
+			TreeMap<String, Integer> treeMap = new TreeMap<String, Integer>(
+					comparator);
 
-	         while (!treeMap.isEmpty()) {
-	            Map.Entry<String, Integer> nextToGo = treeMap.pollFirstEntry();
-	            int fileIndex = nextToGo.getValue().intValue();
-	            writer.println(nextToGo.getKey());
+			// read first line of each file. We don't check for EOF here, probably should
+			for (int i = 0; i < inFiles.size(); i++) {
+				readers[i] = new BufferedReader(new FileReader(inFiles.get(i)));
+				String line = readers[i].readLine();
+				treeMap.put(line, Integer.valueOf(i));
+			}
 
-	            String line = readers[fileIndex].readLine();
-	            if (line != null)
-	               treeMap.put(line, Integer.valueOf(fileIndex));
-	         }
-	      }
-	      finally {
-	         // close everything here...
-	      }
-	   }
-	
+			while (!treeMap.isEmpty()) {
+				Map.Entry<String, Integer> nextToGo = treeMap.pollFirstEntry();
+				int fileIndex = nextToGo.getValue().intValue();
+				writer.println(nextToGo.getKey());
+
+				String line = readers[fileIndex].readLine();
+				if (line != null)
+					treeMap.put(line, Integer.valueOf(fileIndex));
+			}
+		}
+		finally {
+			writer.close();
+		}
+	}
+
 	// merging the sorted file
 	public int mergeSortedFiles(List<File> files, File outputfile, final Comparator<String> cmp) throws IOException {
 
@@ -411,8 +408,6 @@ public class MainMaster {
 
 		try {
 			for(String r : sortedList) {
-
-				System.out.println("Sorted List: "+r);
 				fbw.write(r);
 				fbw.newLine();
 			}

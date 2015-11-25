@@ -48,6 +48,7 @@ public class MainSlave {
 
 				// send the sorted list back to the server
 				output.writeObject(sortedList);
+				
 			}
 
 		} catch (UnknownHostException e) {
@@ -64,7 +65,7 @@ public class MainSlave {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException {
-		new MainSlave("localhost", 6000).start();
+		new MainSlave("localhost", 6030).start();
 	}
 	
 }

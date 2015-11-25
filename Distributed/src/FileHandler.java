@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -72,16 +73,31 @@ public class FileHandler {
 	/*
 	 * Data buffer of size is read and passed
 	 */
-	ArrayList<String> read(int startIndex, int buff_size) throws IOException {
+	String s =null;
+	ArrayList<String> read(int startIndex, int buff_size) throws IOException, InterruptedException {
 		ArrayList<String> list = new ArrayList<String>();
 		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
 		
 		br.setLineNumber(startIndex);
 				
 		int currentPos = 0;
-		
+		BufferedWriter fbw = new BufferedWriter(new FileWriter("check.txt"));
 		while(currentPos < buff_size) {
-			 list.add(br.readLine());
+			s = br.readLine();
+		//	fbw.write(s);
+//			if(s.equals(""))
+//			{
+//				System.out.println("IS Empty");
+//			//	System.out.println("It is empty");
+//			//	Thread.sleep(5000);
+//				currentPos++;
+//			continue;
+//			
+//			}
+			System.out.println("--------------------------------"+s);
+			
+			// list.add(br.readLine());
+			list.add(s);
 			 currentPos++;
 		}
 		return list;
@@ -145,3 +161,5 @@ public class FileHandler {
 	}
 
 }
+
+ 

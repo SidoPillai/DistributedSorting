@@ -1,8 +1,12 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -22,6 +26,17 @@ import java.util.Scanner;
  */
 public class FileHandler {
 
+	FileInputStream ios = null;
+	int read;
+	byte[] buffer;
+	int buff_size;// Segment Size
+
+	public FileHandler(String file, int buff_size) throws FileNotFoundException {
+		ios = new FileInputStream(file);
+		read = 0;
+		this.buff_size = buff_size;
+	}
+	
 	/**
 	 * Extract a chunk from a file
 	 * 
@@ -55,6 +70,39 @@ public class FileHandler {
 		return bytes;
 	}
 
+	/*
+	 * Data buffer of size is read and passed
+	 */
+	String s =null;
+	ArrayList<String> read(int startIndex, int buff_size) throws IOException, InterruptedException {
+		ArrayList<String> list = new ArrayList<String>();
+		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
+		
+		br.setLineNumber(startIndex);
+				
+		int currentPos = 0;
+		BufferedWriter fbw = new BufferedWriter(new FileWriter("check.txt"));
+		while(currentPos < buff_size) {
+			s = br.readLine();
+		//	fbw.write(s);
+//			if(s.equals(""))
+//			{
+//				System.out.println("IS Empty");
+//			//	System.out.println("It is empty");
+//			//	Thread.sleep(5000);
+//				currentPos++;
+//			continue;
+//			
+//			}
+			System.out.println("--------------------------------"+s);
+			
+			// list.add(br.readLine());
+			list.add(s);
+			 currentPos++;
+		}
+		return list;
+	}
+
 	/**
 	 * Write on the file for the filename provided
 	 * @param fileName
@@ -76,7 +124,7 @@ public class FileHandler {
 	}
 
 	public static ArrayList<String> getData() throws IOException {
-		File file = new File("new_dataset_tiny.txt");
+		File file = new File("new_dataset_10000.txt");
 		FileInputStream f = new FileInputStream(file);
 		int SIZE = (int)file.length();
 		byte[] barray = new byte[SIZE];
@@ -85,7 +133,7 @@ public class FileHandler {
 		int i = 0;
 
 		while(mb.hasRemaining()) {
-			barray[i]=mb.get();
+			barray[i] = mb.get();
 			i++;	
 		}
 
@@ -96,13 +144,9 @@ public class FileHandler {
 		while (s.hasNext()) {
 			valToSort.add(s.next());
 		}
-
-		//		Heap heap = new Heap(valToSort);
-		//		heap.HeapSort();
-		//		for(int i1 = 1 ; i1 < valToSort.size(); i1++)
-		//		{
-		//			System.out.println(valToSort.get(i1));
-		//		}
+		
+		s.close();
+		f.close();
 		return valToSort;
 	}
 
@@ -113,9 +157,9 @@ public class FileHandler {
 		for (int i = 0; i < list.size(); i++) {
 			pw.write(list.get(i) + "\n");
 		}
-
 		pw.close();
 	}
 
-
 }
+
+ 

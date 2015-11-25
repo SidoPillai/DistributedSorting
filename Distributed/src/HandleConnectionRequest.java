@@ -22,8 +22,6 @@ public class HandleConnectionRequest extends Thread{
 		}
 	};
 
-	MainMaster master;
-
 	int index;
 	public Deque<ArrayList<String>> queue;
 
@@ -33,10 +31,8 @@ public class HandleConnectionRequest extends Thread{
 	 * Constructor
 	 * @param socket
 	 */
-	public HandleConnectionRequest(Socket socket, int index, MainMaster master) {
-		//			this.connectedSocket = socket;
+	public HandleConnectionRequest(Socket socket, int index) {
 		this.index = index;
-		this.master = master;
 		queue = new LinkedList<ArrayList<String>>();
 
 		try {
@@ -50,14 +46,19 @@ public class HandleConnectionRequest extends Thread{
 	/**
 	 * The run method
 	 */
-	@SuppressWarnings("unchecked")
 	public void run() {
 
 		//			try {
 
 		System.out.println("I am Slave Number " + index);
+
 		while(true) {
-//			System.out.println("Slave " + index + " Q size " + queue.size());
+			
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 			
 			if (!this.queue.isEmpty()) {
 				
@@ -97,12 +98,12 @@ public class HandleConnectionRequest extends Thread{
 
 				// add the sorted data in the list of files
 //				synchronized (master.files) {
-					try {
-						master.files.add(master.manageSortedArrays(sortedData));
-					} catch (IOException e) {
+//					try {
+//						master.files.add(master.manageSortedArrays(sortedData));
+//					} catch (IOException e) {
 //						 TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+//						e.printStackTrace();
+//					}
 //				}
 
 				System.out.println("Added to sorted data");

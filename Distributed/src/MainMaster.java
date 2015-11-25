@@ -8,21 +8,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 
 import com.jcraft.jsch.ChannelExec;
@@ -50,9 +42,6 @@ public class MainMaster {
 	// List of list of string which are set out to sort
 	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
 
-	// To keep a track of which chunk is taken by which node
-	Map<String, Integer> map;
-
 	// Keeping a track of slaves which are online
 	List<Socket> listOfSlaves;
 
@@ -63,17 +52,11 @@ public class MainMaster {
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
 	// main comparator for in-place sort
-		Comparator<String> comparator = new Comparator<String>() {
-			public int compare(String r1, String r2) {
-				return Heap.myComparator(r1, r2);
-			}
-		};
-
-//	Comparator<String> comparator = new Comparator<String>() {
-//		public int compare(String r1, String r2) {
-//			return compare(r1, r2);
-//		}
-//	};
+	Comparator<String> comparator = new Comparator<String>() {
+		public int compare(String r1, String r2) {
+			return Heap.myComparator(r1, r2);
+		}
+	};
 
 	// Data to sort 
 	List<String> dataToSort;
@@ -81,7 +64,6 @@ public class MainMaster {
 	List<List<String>> sortedChunks = new ArrayList<List<String>>();
 
 	public MainMaster() {
-		map = new HashMap<String, Integer>();
 		listOfSlaves = new ArrayList<Socket>();
 	}
 
@@ -89,7 +71,7 @@ public class MainMaster {
 		this.subnet = subnet;
 	}
 
-	public void start() throws IOException, ClassNotFoundException {
+	public void start() throws IOException, ClassNotFoundException, InterruptedException {
 
 		try{
 			serverSocket = new ServerSocket(port);
@@ -123,7 +105,7 @@ public class MainMaster {
 				Socket socket = serverSocket.accept();
 				System.out.println("Accepted one node");
 				listOfSlaves.add(socket);
-				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
+				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count); 
 				listOfConnections.add(conn);
 				conn.start();
 				filestoSort.add(null);
@@ -140,10 +122,11 @@ public class MainMaster {
 			File file = new File("new_dataset_1B.txt");
 			long noOfLines = countLines("new_dataset_1B.txt");
 			int noOfChunks = 40000;
+			int chunksize = (int)noOfLines/noOfChunks;
+			
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
-			int chunksize = (int)noOfLines/noOfChunks;
 			System.out.println("Size of each chunk " + chunksize);
 
 			FileHandler handler = new FileHandler("new_dataset_1B.txt", chunksize);
@@ -158,7 +141,7 @@ public class MainMaster {
 			while (true) {
 
 				if(counter < listOfSlaves.size()) {
-					
+
 					if (listOfConnections.get(counter).queue.size() == 0) {
 						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
 						counter++;
@@ -166,6 +149,8 @@ public class MainMaster {
 						System.out.println("Added data to chunk");
 					}
 					
+					Thread.sleep(400);
+
 				} else {
 					counter = 0;
 				}
@@ -222,7 +207,7 @@ public class MainMaster {
 		return false;
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException, IOException {
+	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
 		new MainMaster().start();
 	}
 
@@ -255,7 +240,7 @@ public class MainMaster {
 		}
 
 	}
-	
+
 	// dividing the file into small blocks
 	public static long estimateBestSizeOfBlocks(File filetobesorted) {
 		long sizeoffile = filetobesorted.length();

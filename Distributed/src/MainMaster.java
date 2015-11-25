@@ -17,9 +17,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
+//import com.jcraft.jsch.ChannelExec;
+//import com.jcraft.jsch.JSch;
+//import com.jcraft.jsch.Session;
 
 public class MainMaster {
 
@@ -179,30 +179,30 @@ public class MainMaster {
 	}
 
 	// Running this command to send the file  
-	public static boolean sendFiles(String hostname) {
-		Session session = null;
-		ChannelExec channel = null;
-
-		try{
-			JSch jsch = new JSch();
-			session = jsch.getSession(hostname);
-			session.connect();
-			channel = (ChannelExec) session.openChannel("exec");                        
-			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
-			channel.connect();
-			return true;
-		} catch(Exception e){
-			e.printStackTrace();
-		} finally {
-			if (channel != null) {
-				channel.disconnect();
-			}
-			if (session != null) {
-				session.disconnect();
-			}
-		}
-		return false;
-	}
+//	public static boolean sendFiles(String hostname) {
+//		Session session = null;
+//		ChannelExec channel = null;
+//
+//		try{
+//			JSch jsch = new JSch();
+//			session = jsch.getSession(hostname);
+//			session.connect();
+//			channel = (ChannelExec) session.openChannel("exec");                        
+//			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
+//			channel.connect();
+//			return true;
+//		} catch(Exception e){
+//			e.printStackTrace();
+//		} finally {
+//			if (channel != null) {
+//				channel.disconnect();
+//			}
+//			if (session != null) {
+//				session.disconnect();
+//			}
+//		}
+//		return false;
+//	}
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
 		new MainMaster().start();

@@ -52,9 +52,15 @@ public class MainMaster {
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
 	// main comparator for in-place sort
+	//	Comparator<String> comparator = new Comparator<String>() {
+	//		public int compare(String r1, String r2) {
+	//			return Heap.myComparator(r1, r2);
+	//		}
+	//	};
+
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String r1, String r2) {
-			return Heap.myComparator(r1, r2);
+			return r1.compareTo(r2);
 		}
 	};
 
@@ -112,7 +118,7 @@ public class MainMaster {
 			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 100;
 			int chunksize = (int)noOfLines/noOfChunks;
-			
+
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
@@ -127,7 +133,7 @@ public class MainMaster {
 
 			int counter = 0;  // assign to slave
 			int limitToRead = 0;  // only read based on no. of chunks
-			
+
 			while (true) {
 
 				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
@@ -148,10 +154,11 @@ public class MainMaster {
 				}
 			}
 			System.out.println("------MERGING FILE------");
-			
+
 			// File Merging
 			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
-			
+
+			System.out.println("----------DONE----------");
 			// Done
 
 		} catch(IOException e){
@@ -180,30 +187,30 @@ public class MainMaster {
 	}
 
 	// Running this command to send the file  
-//	public static boolean sendFiles(String hostname) {
-//		Session session = null;
-//		ChannelExec channel = null;
-//
-//		try{
-//			JSch jsch = new JSch();
-//			session = jsch.getSession(hostname);
-//			session.connect();
-//			channel = (ChannelExec) session.openChannel("exec");                        
-//			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
-//			channel.connect();
-//			return true;
-//		} catch(Exception e){
-//			e.printStackTrace();
-//		} finally {
-//			if (channel != null) {
-//				channel.disconnect();
-//			}
-//			if (session != null) {
-//				session.disconnect();
-//			}
-//		}
-//		return false;
-//	}
+	//	public static boolean sendFiles(String hostname) {
+	//		Session session = null;
+	//		ChannelExec channel = null;
+	//
+	//		try{
+	//			JSch jsch = new JSch();
+	//			session = jsch.getSession(hostname);
+	//			session.connect();
+	//			channel = (ChannelExec) session.openChannel("exec");                        
+	//			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
+	//			channel.connect();
+	//			return true;
+	//		} catch(Exception e){
+	//			e.printStackTrace();
+	//		} finally {
+	//			if (channel != null) {
+	//				channel.disconnect();
+	//			}
+	//			if (session != null) {
+	//				session.disconnect();
+	//			}
+	//		}
+	//		return false;
+	//	}
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
 		new MainMaster().start();

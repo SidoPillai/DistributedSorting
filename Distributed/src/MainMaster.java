@@ -86,26 +86,15 @@ public class MainMaster {
 			//				sendFiles(host);
 			//			}
 
-			// compile the slave class 
-
-			// the run these clients
-
-			// Running the clients 
-			//			for (String host : listOfAvailableHost) {
-			//  Call the slaves
-			//				new MainSlave(serverSocket.getInetAddress().getHostAddress(), port).start();
-			//			}
 
 			// wait for the connection requests
 			//			for(int count = 0; count < listOfAvailableHost.size(); ++count) {	
 
-
-
-			for(int count = 0; count < 3; count++) {								
+			for (int count = 0; count < 3; count++) {								
 				Socket socket = serverSocket.accept();
 				System.out.println("Accepted one node");
 				listOfSlaves.add(socket);
-				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count); 
+				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
 				listOfConnections.add(conn);
 				conn.start();
 				filestoSort.add(null);
@@ -137,24 +126,32 @@ public class MainMaster {
 			System.out.println("Adding data to chunks");
 
 			int counter = 0;
-
+			int limitToRead = 0;
+			
 			while (true) {
 
-				if(counter < listOfSlaves.size()) {
+				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
 
 					if (listOfConnections.get(counter).queue.size() == 0) {
 						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
 						counter++;
 						i++;
+						limitToRead++;
 						System.out.println("Added data to chunk");
 					}
-					
-					Thread.sleep(400);
-
-				} else {
+					Thread.sleep(1);
+				} else if (limitToRead < noOfChunks) {
 					counter = 0;
+				} else {
+					System.out.println("Data read in complete");
+					break;
 				}
 			}
+			
+			// File Merging
+			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
+			
+			// Done
 
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");

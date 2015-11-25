@@ -14,6 +14,8 @@ public class HandleConnectionRequest extends Thread{
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 	
+	// Reference of master to store the files
+	MainMaster master;
 	
 	// main comparator for in-place sort
 	Comparator<String> comparator = new Comparator<String>() {
@@ -31,9 +33,10 @@ public class HandleConnectionRequest extends Thread{
 	 * Constructor
 	 * @param socket
 	 */
-	public HandleConnectionRequest(Socket socket, int index) {
+	public HandleConnectionRequest(Socket socket, int index, MainMaster master) {
 		this.index = index;
 		queue = new LinkedList<ArrayList<String>>();
+		this.master = master;
 
 		try {
 			oos = new ObjectOutputStream(socket.getOutputStream());
@@ -46,9 +49,8 @@ public class HandleConnectionRequest extends Thread{
 	/**
 	 * The run method
 	 */
+	@SuppressWarnings("unchecked")
 	public void run() {
-
-		//			try {
 
 		System.out.println("I am Slave Number " + index);
 
@@ -67,15 +69,11 @@ public class HandleConnectionRequest extends Thread{
 
 				try {
 
-					//	if (filestoSort.size() != 0) {
-
 					try {
-						list = queue.pop();//filestoSort.remove(index);
-						//							this.flagHC = false;
+						list = queue.pop();
 					} catch(Exception e) {
 						System.out.println("Data is not present");
 					}
-					//}
 
 					// technically list at this point should be be null.
 					// If its null means it has read all the content of the file
@@ -97,31 +95,15 @@ public class HandleConnectionRequest extends Thread{
 				}
 
 				// add the sorted data in the list of files
-//				synchronized (master.files) {
-//					try {
-//						master.files.add(master.manageSortedArrays(sortedData));
-//					} catch (IOException e) {
-//						 TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//				}
+					try {
+						master.files.add(master.manageSortedArrays(sortedData));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 
 				System.out.println("Added to sorted data");
-				//						break;
 			}
-
 		}
-
-		//			} catch (Exception e) {
-		//				e.printStackTrace();
-		//			} finally {
-		//				try {
-		//					// closing the socket
-		//					this.serverSocketTCP.close();
-		//				} catch (IOException e) {
-		//					e.printStackTrace();
-		//				}
-		//			}
 	}
 
 	// In-place sort if an exception occurs

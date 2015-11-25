@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -73,12 +74,10 @@ public class FileHandler {
 	 */
 	ArrayList<String> read(int startIndex, int buff_size) throws IOException {
 		ArrayList<String> list = new ArrayList<String>();
-		BufferedReader br = new BufferedReader(new InputStreamReader(ios));
+		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
 		
-		for(int i = 0; i < startIndex; ++i) {
-			br.readLine();
-		}
-		
+		br.setLineNumber(startIndex);
+				
 		int currentPos = 0;
 		
 		while(currentPos < buff_size) {

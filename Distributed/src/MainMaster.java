@@ -108,9 +108,9 @@ public class MainMaster {
 
 			System.out.println("Sending the data...");
 
-			File file = new File("new_dataset_1B.txt");
-			long noOfLines = countLines("new_dataset_1B.txt");
-			int noOfChunks = 40000;
+			File file = new File("new_dataset_10000.txt");
+			long noOfLines = countLines("new_dataset_10000.txt");
+			int noOfChunks = 100;
 			int chunksize = (int)noOfLines/noOfChunks;
 			
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
@@ -125,8 +125,8 @@ public class MainMaster {
 
 			System.out.println("Adding data to chunks");
 
-			int counter = 0;
-			int limitToRead = 0;
+			int counter = 0;  // assign to slave
+			int limitToRead = 0;  // only read based on no. of chunks
 			
 			while (true) {
 
@@ -147,6 +147,7 @@ public class MainMaster {
 					break;
 				}
 			}
+			System.out.println("------MERGING FILE------");
 			
 			// File Merging
 			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
@@ -166,7 +167,7 @@ public class MainMaster {
 		ArrayList<String> onlineHost = new ArrayList<String>();
 		int timeout = 1000;
 
-		for (int i = 1;i<254;i++){
+		for (int i = 1;i < 254;i++){
 			System.out.println(i);
 			String host=subnet + "." + i;
 			if (InetAddress.getByName(host).isReachable(timeout)){

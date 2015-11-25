@@ -64,7 +64,7 @@ public class MainSlave {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException {
-		new MainSlave(args[0], 6000).start();
+		new MainSlave("localhost", 6000).start();
 	}
 	
 }

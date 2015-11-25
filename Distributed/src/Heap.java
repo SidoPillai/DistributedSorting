@@ -15,6 +15,10 @@ public class Heap {
 
 	/* Get the Small value between the two string */
 	public static String getSmallVal(String a , String b ) {
+		
+		System.out.println("VALUE OF A----" + a);
+		System.out.println("VALUE OF B----" + b);
+
 		match = pattern.matcher(a);
 		int count = 0;
 		while(match.find()) {
@@ -52,6 +56,8 @@ public class Heap {
 	
 	/* Get the Small value between the two string */
 	public static int myComparator(String a , String b) {
+		System.out.println("VALUE OF A----" + a);
+		System.out.println("VALUE OF B----" + b);
 		match = pattern.matcher(a);
 		int count = 0;
 		

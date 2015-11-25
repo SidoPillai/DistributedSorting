@@ -1,24 +1,22 @@
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.TreeMap;
+import java.util.Scanner;
 
 public class MainMaster {
 
@@ -31,51 +29,105 @@ public class MainMaster {
 	// list of available of host - stores IP
 	List<String> listOfAvailableHost;
 
-	// Subnet for discovering the machines connected to the network
-	String subnet;
-
-	// flag to indicate when to start sending to client
-	static volatile boolean flag = false;
-
-	static Boolean f = false;
-
-	// List of list of string which are set out to sort
-	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
-
 	// Keeping a track of slaves which are online
 	List<Socket> listOfSlaves;
 
 	// List of sorted files
 	List<File> files = new ArrayList<File>();
 
+	// Sum Map
+	HashMap<String, Integer> sum_map = new HashMap<String, Integer>();
+
+	// prefix occurencesmap
+	HashMap<String, Integer> count_map = new HashMap<String, Integer>();
+
 	// List of ConnectionHandlers
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
-	CustomComparator comp = new CustomComparator();
+	// List of ConnectionHandlers for Task 2
+	List<HandleTask2ConnectionRequest> listOfConnectionsTask2 = new ArrayList<HandleTask2ConnectionRequest>();
 
-	// main comparator for in-place sort
-	Comparator<String> comparator = new Comparator<String>() {
-		public int compare(String a, String b) {
-			return a.compareTo(b);
-		}
-	};
+	// Used for lock in task 2
+	static Object o = 0;
 
 	// Data to sort 
 	List<String> dataToSort;
 	List<List<String>> chunks = new ArrayList<List<String>>();
 	List<List<String>> sortedChunks = new ArrayList<List<String>>();
 
+	// Constructor
 	public MainMaster() {
 		listOfSlaves = new ArrayList<Socket>();
 		listOfAvailableHost = new ArrayList<>();
 	}
 
-	MainMaster(String subnet) {
-		this.subnet = subnet;
+	// Task 1
+	public void startTask1() throws IOException, ClassNotFoundException, InterruptedException {
+
+		try{
+			long start = System.currentTimeMillis();
+			serverSocket = new ServerSocket(port);
+			System.out.println("Master listening on port " + port);
+			// Gets the IP from the file
+			readIP();
+			// Establish connection with the clients
+			connectTask1();
+			// start pinging once all the nodes are connected
+			//			new Ping().start();
+			long noOfLines = countLines("new_dataset_10000.txt");
+			int noOfChunks = 1000;
+			int chunksize = (int) noOfLines/noOfChunks;
+
+			System.out.println("Number of lines in the file " + noOfLines);
+			System.out.println("Number of chunks " + noOfChunks);
+			System.out.println("Size of each chunk " + chunksize);
+
+			// handler to read line by line
+			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
+
+			// Read data one by one
+			int i = 0;
+			int counter = 0;  // assign to slave
+			int limitToRead = 0;  // only read based on no. of chunks
+
+			while (true) {
+
+				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
+					if (listOfConnections.get(counter).queue.size() == 0) {
+						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
+						counter++;
+						i++;
+						limitToRead++;
+					}
+					Thread.sleep(1);
+				} else if (limitToRead < noOfChunks) {
+					counter = 0;
+				} else {
+					System.out.println("Data read in complete");
+					break;
+				}
+			}
+
+			System.out.println("------ MERGING SORTED FILES ------");
+			Thread.sleep(500);
+			// File Merging
+			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"));
+			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
+			// Done
+			System.out.println("-------------- DONE --------------");
+			// Quiting the program
+			System.exit(0);
+
+		} catch(IOException e){
+			System.out.println("Something went wrong while connecting to a client");
+			return;
+		} finally {
+			serverSocket.close();
+		}
 	}
-
-	public void start() throws IOException, ClassNotFoundException, InterruptedException {
-
+	
+	// Task 2
+	public void startTask2() throws InterruptedException, IOException {
 		try{
 
 			long start = System.currentTimeMillis();
@@ -87,12 +139,16 @@ public class MainMaster {
 			readIP();
 
 			// Establish connection with the clients
-			connect();
+			connectTask2();
+
+			// everytime resetting the value of the map
+			for (int i = 65; i < 91; i++) {
+				sum_map.put(String.valueOf((char) i), 0);
+				count_map.put(String.valueOf((char) i), 0);
+			}
 
 			// start pinging once all the nodes are connected
-//			new Ping().start();
-
-//			System.out.println("Sending the data...");
+			//			new Ping().start();
 
 			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 1000;
@@ -107,9 +163,6 @@ public class MainMaster {
 
 			// Read data one by one
 			int i = 0;
-
-//			System.out.println("Adding data to chunks");
-
 			int counter = 0;  // assign to slave
 			int limitToRead = 0;  // only read based on no. of chunks
 
@@ -117,12 +170,11 @@ public class MainMaster {
 
 				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
 
-					if (listOfConnections.get(counter).queue.size() == 0) {
-						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
+					if (listOfConnectionsTask2.get(counter).queue.size() == 0) {
+						listOfConnectionsTask2.get(counter).queue.add(handler.read(i*chunksize, chunksize));
 						counter++;
 						i++;
 						limitToRead++;
-//						System.out.println("Added data to chunk");
 					}
 					Thread.sleep(1);
 				} else if (limitToRead < noOfChunks) {
@@ -132,23 +184,12 @@ public class MainMaster {
 					break;
 				}
 			}
-
-			System.out.println("------ MERGING SORTED FILEs ------");
-
-			Thread.sleep(5000);
-
-			// File Merging
-			//			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
-
-			mergeSort(files, new File("output_10000.txt"), comp);
-
+			System.out.println("---------- WRITING FILES ---------");
+			writeToFile();
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
-			
 			// Done
 			System.out.println("-------------- DONE --------------");
-
 			System.exit(0);
-
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
 			return;
@@ -157,17 +198,28 @@ public class MainMaster {
 		}
 	}
 
-	private void connect() throws IOException {
+	// Setup connections with the slaves for task 1
+	private void connectTask1() throws IOException {
 
 		for (int count = 0; count < listOfAvailableHost.size(); count++) {								
 			Socket socket = serverSocket.accept();
-//			System.out.println("Accepted one node");
 			listOfSlaves.add(socket);
 			HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
 			listOfConnections.add(conn);
 			conn.start();
-			filestoSort.add(null);
-			System.out.println("Slave : " + (count+1) + " connected");
+		}
+		System.out.println("All nodes are now connected..");
+	}
+
+	// Setup connections with the slaves for task 2
+	private void connectTask2() throws IOException {
+
+		for (int count = 0; count < listOfAvailableHost.size(); count++) {								
+			Socket socket = serverSocket.accept();
+			listOfSlaves.add(socket);
+			HandleTask2ConnectionRequest conn = new HandleTask2ConnectionRequest(socket, count, this); 
+			listOfConnectionsTask2.add(conn);
+			conn.start();
 		}
 
 		System.out.println("All nodes are now connected..");
@@ -182,22 +234,6 @@ public class MainMaster {
 			listOfAvailableHost.add(line);
 		}
 		br.close();
-	}
-
-	// looks for the host in the network and adds inti the list of online devices 
-	public static ArrayList<String> checkHosts(String subnet) throws UnknownHostException, IOException {
-		ArrayList<String> onlineHost = new ArrayList<String>();
-		int timeout = 1000;
-
-		for (int i = 1;i < 254;i++){
-			System.out.println(i);
-			String host=subnet + "." + i;
-			if (InetAddress.getByName(host).isReachable(timeout)){
-				//				System.out.println(host + " is reachable");
-				onlineHost.add(host);
-			}
-		}
-		return onlineHost;
 	}
 
 	// Ping the slaves to get the status
@@ -227,11 +263,6 @@ public class MainMaster {
 				}
 			}
 		}
-
-	}
-
-	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
-		new MainMaster().start();
 	}
 
 	// dividing the file into small blocks
@@ -255,124 +286,70 @@ public class MainMaster {
 		return blocksize;
 	}
 
-	public void mergeSort(List<File> inFiles, File outFile, Comparator<String> comparator) throws IOException  {
+	// Merging the sorted files
+	public void mergeSortedFiles(List<File> files, File outputfile) throws IOException {
 
-		PrintWriter writer = null;
+		Comparator<String> comp = new Heap();
+		List <BinaryFileBuffer> alist = new ArrayList<BinaryFileBuffer>();
+		PriorityQueue<String> prq = new PriorityQueue<String>(10,comp); // For sorting elements.
 
-		try {
-			BufferedReader[] readers = new BufferedReader[inFiles.size()];
-			writer = new PrintWriter(outFile);
-			TreeMap<String, Integer> treeMap = new TreeMap<String, Integer>(
-					comparator);
-
-			// read first line of each file. We don't check for EOF here, probably should
-			for (int i = 0; i < inFiles.size(); i++) {
-				readers[i] = new BufferedReader(new FileReader(inFiles.get(i)));
-				String line = readers[i].readLine();
-				treeMap.put(line, Integer.valueOf(i));
-			}
-
-			while (!treeMap.isEmpty()) {
-				Map.Entry<String, Integer> nextToGo = treeMap.pollFirstEntry();
-				int fileIndex = nextToGo.getValue().intValue();
-				writer.println(nextToGo.getKey());
-
-				String line = readers[fileIndex].readLine();
-				if (line != null)
-					treeMap.put(line, Integer.valueOf(fileIndex));
-			}
-		}
-		finally {
-			writer.close();
-		}
-	}
-
-	// merging the sorted file
-	public int mergeSortedFiles(List<File> files, File outputfile, final Comparator<String> cmp) throws IOException {
-
-		PriorityQueue<BinaryFileBuffer> pq = new PriorityQueue<BinaryFileBuffer>(11, new Comparator<BinaryFileBuffer>() {
-
-			public int compare(BinaryFileBuffer i, BinaryFileBuffer j) {
-				return cmp.compare(i.peek(), j.peek());
-			}
-		});
+		BufferedWriter fbw = new BufferedWriter(new FileWriter(outputfile));
+		int countNoFile = 0;
+		int countOfLines = 0;
+		int fileSize = files.size();
+		BinaryFileBuffer temp;
+		int flag = 0; // To check if all the files are empty or not
 
 		for (File f : files) {
 			BinaryFileBuffer bfb = new BinaryFileBuffer(f);
-			pq.add(bfb);
+			alist.add(bfb); // Put all the sorted files in the list.
 		}
 
-		BufferedWriter fbw = new BufferedWriter(new FileWriter(outputfile));
-		int rowcounter = 0;
-
 		try {
-			while(pq.size() > 0) {
-				BinaryFileBuffer bfb = pq.poll();
-				String r = bfb.pop();
-				fbw.write(r);
-				fbw.newLine();
-				++rowcounter;
 
-				if(bfb.empty()) {
-					bfb.fbr.close();
-					bfb.originalfile.delete(); // we don't need you anymore
-				} else {
-					pq.add(bfb); // add it back
+			while(true) {
+
+				while(countNoFile<fileSize) {
+
+					temp = alist.get(countNoFile);
+
+					if(!temp.empty()) {
+
+						while(countOfLines<1000) {
+
+							if(!temp.empty()) {
+								prq.add(temp.pop());
+								countOfLines++;
+							} else {
+								break;
+							}
+						}
+						countOfLines = 0;
+						countNoFile++;
+					}
+					else {
+						countNoFile++;
+						flag++;  // If this is qual to number of files in the list that means all are empty and this will
+						// the last iteration.
+					}
+				}
+				countNoFile = 0;
+				String r;
+				
+				while(!prq.isEmpty()) {
+					r = prq.poll();
+					fbw.write(r);
+					fbw.newLine();
+				}
+				if(flag == fileSize) {
+					break;
 				}
 			}
 		} finally { 
 			fbw.close();
-			for(BinaryFileBuffer bfb : pq ) bfb.close();
-		}
-		return rowcounter;
-	}
-
-	public class BinaryFileBuffer {
-		public static final int BUFFERSIZE = 2048;
-		public BufferedReader fbr;
-		public File originalfile;
-		private String cache;
-		private boolean empty;
-
-		public BinaryFileBuffer(File f) throws IOException {
-			originalfile = f;
-			fbr = new BufferedReader(new FileReader(f), BUFFERSIZE);
-			reload();
-		}
-
-		public boolean empty() {
-			return empty;
-		}
-
-		private void reload() throws IOException {
-			try {
-				if((this.cache = fbr.readLine()) == null){
-					empty = true;
-					cache = null;
-				}
-				else{
-					empty = false;
-				}
-			} catch(EOFException oef) {
-				empty = true;
-				cache = null;
-			}
-		}
-
-		public void close() throws IOException {
-			fbr.close();
-		}
-
-
-		public String peek() {
-			if(empty()) return null;
-			return cache.toString();
-		}
-
-		public String pop() throws IOException {
-			String answer = peek();
-			reload();
-			return answer;
+			comp = null;
+			alist = null;
+			prq = null;
 		}
 	}
 
@@ -416,4 +393,64 @@ public class MainMaster {
 		}
 		return newtmpfile;
 	}
+
+	// Reduction function to keep a track of the provenance
+	public void manageMap(MapObjects obj) {
+
+		// update the map objects
+		synchronized (o) {
+			HashMap<String, Integer> map1 =	obj.count_map;
+			HashMap<String, Integer> map2 = obj.sum_map;
+			String[] a = new String[map1.size()]; 
+			Object[] keys = map1.keySet().toArray();
+
+			for (int row = 0; row < a.length; row++) {
+				a[row] = (String) keys[row];
+			}
+
+			for (int i = 0; i < map1.size(); i++) {
+				Integer l = map1.get(a[i]) + count_map.get(a[i]);
+				count_map.put(a[i], l);
+
+				Integer ll = map2.get(a[i]) + sum_map.get(a[i]);
+				sum_map.put(a[i], ll);
+			}
+		}
+	}
+
+	// Writing the output of task2 
+	private void writeToFile() throws IOException {
+		File task2 = new File("task2.txt"); // file to write values into
+
+		BufferedWriter file_out = new BufferedWriter(new FileWriter(task2));
+
+		for (int i = 65; i < 91; i++) {
+
+			int val = count_map.get(String.valueOf((char) i));
+
+			if (val > 0) {
+				file_out.write((char) i + " " + val + " "
+						+ sum_map.get(String.valueOf((char) i)) + "\n");
+			}
+		}
+		file_out.close();
+	}
+
+
+	// Main method
+	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
+		System.out.println("Tasks");
+		System.out.println("1. - Distributed Sorting");
+		System.out.println("2. - Calculate Average Unique");
+		System.out.println("Enter your choice");
+		Scanner sc = new Scanner(System.in);
+		String choice = sc.next();
+		if (choice.equals("1")) {
+			new MainMaster().startTask1();
+		} else {
+			new MainMaster().startTask2();
+		}
+		sc.close();
+	}
+
 }

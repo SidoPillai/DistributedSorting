@@ -4,9 +4,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 
-public class HandleConnectionRequest extends Thread{
+public class HandleTask2ConnectionRequest extends Thread{
 
 	// Member variables
 	private ObjectInputStream ois;
@@ -18,10 +19,14 @@ public class HandleConnectionRequest extends Thread{
 	int index;
 	public Deque<ArrayList<String>> queue;
 
-	ArrayList<String> sortedData; 
+	//	ArrayList<String> sortedData;
+	MapObjects obj;
 
-	// Constructor
-	public HandleConnectionRequest(Socket socket, int index, MainMaster master) {
+	/**
+	 * Constructor
+	 * @param socket
+	 */
+	public HandleTask2ConnectionRequest(Socket socket, int index, MainMaster master) {
 		this.index = index;
 		queue = new LinkedList<ArrayList<String>>();
 		this.master = master;
@@ -37,7 +42,6 @@ public class HandleConnectionRequest extends Thread{
 	/**
 	 * The run method
 	 */
-	@SuppressWarnings("unchecked")
 	public void run() {
 
 		while(true) {
@@ -51,7 +55,9 @@ public class HandleConnectionRequest extends Thread{
 			if (!this.queue.isEmpty()) {
 
 				ArrayList<String> list = null;
+
 				try {
+
 					try {
 						list = queue.pop();
 					} catch(Exception e) {
@@ -67,26 +73,57 @@ public class HandleConnectionRequest extends Thread{
 					}
 
 					// will wait for the sorted arraylist from the slaves
-					sortedData = (ArrayList<String>) ois.readObject();
+					obj = (MapObjects) ois.readObject();
+
 				} catch(Exception e) {
 
 					// in case if an interupption occurs the load is handled here
-					sortedData = inPlaceSort(list);
+					obj = inPlaceMapper(list);
 				}
-
-				// add the sorted data in the list of files
-				try {
-					master.files.add(master.manageSortedArrays(sortedData));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				master.manageMap(obj);
 			}
 		}
 	}
 
 	// In-place sort if an exception occurs
-	private ArrayList<String> inPlaceSort(ArrayList<String> list) {
-		Collections.sort(list, comp);
-		return list;
+	private MapObjects inPlaceMapper(ArrayList<String> list) {
+
+		// Sum Map
+		HashMap<String, Integer> sum_map = new HashMap<String, Integer>();
+
+		// prefix occurencesmap
+		HashMap<String, Integer> count_map = new HashMap<String, Integer>();
+
+
+		for (int i = 65; i < 91; i++) {
+			sum_map.put(String.valueOf((char) i), 0);
+			count_map.put(String.valueOf((char) i), 0);
+		}
+
+		String s = null;
+
+		for (int i = 0; i < list.size(); i++) {
+			s = list.get(i);
+			String letter = s.substring(0, 1).toUpperCase();
+			Integer num = Integer.parseInt(s.substring(1));
+
+			if (sum_map.containsKey(letter)) {
+				Integer val = sum_map.get(letter);
+				sum_map.put(letter, val + num);
+			} else {
+				sum_map.put(letter, num);
+			}
+
+			if (count_map.containsKey(letter)) {
+				Integer count = count_map.get(letter);
+				count_map.put(letter, ++count);
+			} else {
+				count_map.put(letter, 1);
+			}
+		}
+
+		MapObjects obj = new MapObjects(sum_map, count_map);
+		return obj;
 	}
+
 }

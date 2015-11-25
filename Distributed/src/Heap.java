@@ -15,6 +15,7 @@ public class Heap {
 
 	/* Get the Small value between the two string */
 	public static String getSmallVal(String a , String b ) {
+<<<<<<< HEAD
 
 		System.out.println("Value of a is :     "+a+"  "+"value of b is      :"+b);
 		pattern = Pattern.compile("[a-zA-Z]");
@@ -226,6 +227,9 @@ public class Heap {
 		}
 		return val;
 		/*
+=======
+		
+>>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 		System.out.println("VALUE OF A----" + a);
 		System.out.println("VALUE OF B----" + b);
 
@@ -267,6 +271,7 @@ public class Heap {
 
 	/* Get the Small value between the two string */
 	public static int myComparator(String a , String b) {
+<<<<<<< HEAD
 		pattern = Pattern.compile("[a-zA-Z]");
 		System.out.println("Value of a is :     "+a+"  "+"value of b is      :"+b);
 		int a_first = (int)a.charAt(0);
@@ -374,6 +379,8 @@ public class Heap {
 
 		/*
 
+=======
+>>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 		System.out.println("VALUE OF A----" + a);
 		System.out.println("VALUE OF B----" + b);
 		match = pattern.matcher(a);

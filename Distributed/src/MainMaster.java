@@ -108,8 +108,8 @@ public class MainMaster {
 
 			System.out.println("Sending the data...");
 
-			File file = new File("new_dataset_10001.txt");
-			long noOfLines = countLines("new_dataset_10001.txt");
+			File file = new File("new_dataset_10000.txt");
+			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 100;
 			int chunksize = (int)noOfLines/noOfChunks;
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
@@ -117,7 +117,7 @@ public class MainMaster {
 			System.out.println("Number of chunks " + noOfChunks);
 			System.out.println("Size of each chunk " + chunksize);
 
-			FileHandler handler = new FileHandler("new_dataset_10001.txt", chunksize);
+			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;
@@ -129,7 +129,7 @@ public class MainMaster {
 
 			while (true) {
 
-				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
+				if(counter < listOfSlaves.size() && limitToRead < noOfChunks-1) {
 
 					if (listOfConnections.get(counter).queue.size() == 0) {
 						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
@@ -139,7 +139,7 @@ public class MainMaster {
 						System.out.println("Added data to chunk");
 					}
 					Thread.sleep(1);
-				} else if (limitToRead < noOfChunks) {
+				} else if (limitToRead < noOfChunks-1) {
 					counter = 0;
 				} else {
 					System.out.println("Data read in complete");
@@ -150,11 +150,13 @@ public class MainMaster {
 
 			Thread.sleep(1000);
 			// File Merging
-			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
+			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
 
 			System.out.println("----------DONE----------");
 			// Done
 
+			System.exit(0);
+			
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
 			return;

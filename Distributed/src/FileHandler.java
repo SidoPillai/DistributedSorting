@@ -30,8 +30,10 @@ public class FileHandler {
 	int read;
 	byte[] buffer;
 	int buff_size;// Segment Size
+	String fileName;
 
 	public FileHandler(String file, int buff_size) throws FileNotFoundException {
+		fileName = file;
 		ios = new FileInputStream(file);
 		read = 0;
 		this.buff_size = buff_size;
@@ -74,7 +76,7 @@ public class FileHandler {
 	 * Data buffer of size is read and passed
 	 */
 	ArrayList<String> read(int startIndex, int buff_size) throws IOException, InterruptedException {
-
+		ios = new FileInputStream(fileName);
 		ArrayList<String> list = new ArrayList<String>();
 		String str;
 		BufferedReader br = new BufferedReader(new InputStreamReader(ios));
@@ -89,7 +91,11 @@ public class FileHandler {
 		while(currentPos < buff_size) {
 			s = br.readLine();
 			System.out.println("--------------------------------" + s);
-			list.add(s);
+			if(s == null || s.equals("")) {
+
+			} else {
+				list.add(s);
+			}
 			currentPos++;
 		}
 		return list;

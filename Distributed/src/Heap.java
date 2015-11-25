@@ -15,7 +15,6 @@ public class Heap {
 
 	/* Get the Small value between the two string */
 	public static String getSmallVal(String a , String b ) {
-<<<<<<< HEAD
 
 		System.out.println("Value of a is :     "+a+"  "+"value of b is      :"+b);
 		pattern = Pattern.compile("[a-zA-Z]");
@@ -271,7 +270,6 @@ public class Heap {
 
 	/* Get the Small value between the two string */
 	public static int myComparator(String a , String b) {
-<<<<<<< HEAD
 		pattern = Pattern.compile("[a-zA-Z]");
 		System.out.println("Value of a is :     "+a+"  "+"value of b is      :"+b);
 		int a_first = (int)a.charAt(0);

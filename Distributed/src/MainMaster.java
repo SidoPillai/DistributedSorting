@@ -52,21 +52,9 @@ public class MainMaster {
 	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
 
 	// main comparator for in-place sort
-<<<<<<< HEAD
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String r1, String r2) {
 			return Heap.myComparator(r1, r2);
-=======
-	//	Comparator<String> comparator = new Comparator<String>() {
-	//		public int compare(String r1, String r2) {
-	//			return Heap.myComparator(r1, r2);
-	//		}
-	//	};
-
-	Comparator<String> comparator = new Comparator<String>() {
-		public int compare(String r1, String r2) {
-			return r1.compareTo(r2);
->>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 		}
 	};
 
@@ -120,21 +108,16 @@ public class MainMaster {
 
 			System.out.println("Sending the data...");
 
-			File file = new File("new_dataset_10000.txt");
-			long noOfLines = countLines("new_dataset_10000.txt");
+			File file = new File("new_dataset_10001.txt");
+			long noOfLines = countLines("new_dataset_10001.txt");
 			int noOfChunks = 100;
 			int chunksize = (int)noOfLines/noOfChunks;
-<<<<<<< HEAD
-			
-=======
-
->>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
 			System.out.println("Size of each chunk " + chunksize);
 
-			FileHandler handler = new FileHandler("new_dataset_1B.txt", chunksize);
+			FileHandler handler = new FileHandler("new_dataset_10001.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;
@@ -143,11 +126,7 @@ public class MainMaster {
 
 			int counter = 0;  // assign to slave
 			int limitToRead = 0;  // only read based on no. of chunks
-<<<<<<< HEAD
-			
-=======
 
->>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 			while (true) {
 
 				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
@@ -168,19 +147,12 @@ public class MainMaster {
 				}
 			}
 			System.out.println("------MERGING FILE------");
-<<<<<<< HEAD
-			
-			Thread.sleep(1000);
-			// File Merging
-			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
-			
-=======
 
+			Thread.sleep(1000);
 			// File Merging
 			mergeSortedFiles(files, new File("output_file_sorted.txt"), comparator);
 
 			System.out.println("----------DONE----------");
->>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 			// Done
 
 		} catch(IOException e){
@@ -208,58 +180,6 @@ public class MainMaster {
 		return onlineHost;
 	}
 
-	// Running this command to send the file  
-<<<<<<< HEAD
-//	public static boolean sendFiles(String hostname) {
-//		Session session = null;
-//		ChannelExec channel = null;
-//
-//		try{
-//			JSch jsch = new JSch();
-//			session = jsch.getSession(hostname);
-//			session.connect();
-//			channel = (ChannelExec) session.openChannel("exec");                        
-//			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
-//			channel.connect();
-//			return true;
-//		} catch(Exception e){
-//			e.printStackTrace();
-//		} finally {
-//			if (channel != null) {
-//				channel.disconnect();
-//			}
-//			if (session != null) {
-//				session.disconnect();
-//			}
-//		}
-//		return false;
-//	}
-=======
-	//	public static boolean sendFiles(String hostname) {
-	//		Session session = null;
-	//		ChannelExec channel = null;
-	//
-	//		try{
-	//			JSch jsch = new JSch();
-	//			session = jsch.getSession(hostname);
-	//			session.connect();
-	//			channel = (ChannelExec) session.openChannel("exec");                        
-	//			channel.setCommand("scp /home/files ip_server:/Users/siddeshpillai/Documents/workspace/Distributed/src/"); // $> scp file1…fileN IP_OF_HOST:/PATH_TO_YOUR_FOLDER
-	//			channel.connect();
-	//			return true;
-	//		} catch(Exception e){
-	//			e.printStackTrace();
-	//		} finally {
-	//			if (channel != null) {
-	//				channel.disconnect();
-	//			}
-	//			if (session != null) {
-	//				session.disconnect();
-	//			}
-	//		}
-	//		return false;
-	//	}
->>>>>>> e3b5877154eb0b549fc5043f2a4b46036b23f1cf
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
 		new MainMaster().start();
@@ -437,7 +357,7 @@ public class MainMaster {
 
 		try {
 			for(String r : sortedList) {
-				
+
 				System.out.println("Sorted List: "+r);
 				fbw.write(r);
 				fbw.newLine();

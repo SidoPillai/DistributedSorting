@@ -36,7 +36,7 @@ public class FileHandler {
 		read = 0;
 		this.buff_size = buff_size;
 	}
-	
+
 	/**
 	 * Extract a chunk from a file
 	 * 
@@ -73,34 +73,45 @@ public class FileHandler {
 	/*
 	 * Data buffer of size is read and passed
 	 */
-	String s =null;
 	ArrayList<String> read(int startIndex, int buff_size) throws IOException, InterruptedException {
+
 		ArrayList<String> list = new ArrayList<String>();
-		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
-		
-		br.setLineNumber(startIndex);
-				
+		String str;
+		BufferedReader br = new BufferedReader(new InputStreamReader(ios));
+		String s = null;
+
+		for(int i = 0; i < startIndex; ++i) {
+			br.readLine();
+		}
+
 		int currentPos = 0;
-		BufferedWriter fbw = new BufferedWriter(new FileWriter("check.txt"));
+
 		while(currentPos < buff_size) {
 			s = br.readLine();
-		//	fbw.write(s);
-//			if(s.equals(""))
-//			{
-//				System.out.println("IS Empty");
-//			//	System.out.println("It is empty");
-//			//	Thread.sleep(5000);
-//				currentPos++;
-//			continue;
-//			
-//			}
-			System.out.println("--------------------------------"+s);
-			
-			// list.add(br.readLine());
+			System.out.println("--------------------------------" + s);
 			list.add(s);
-			 currentPos++;
+			currentPos++;
 		}
 		return list;
+
+
+		//		ArrayList<String> list = new ArrayList<String>();
+		//		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
+		//		String s = null;
+		//		br.setLineNumber(startIndex);
+		//		int currentPos = 0;
+		//
+		//		while(currentPos < buff_size) {
+		//			s = br.readLine();
+		//			if(s == null || s.equals("")) {
+		//				currentPos++;
+		//			} else { 
+		//				System.out.println("--------------------------------" + s);
+		//				list.add(s);
+		//				currentPos++;
+		//			}
+		//		}
+		//		return list;
 	}
 
 	/**
@@ -144,7 +155,7 @@ public class FileHandler {
 		while (s.hasNext()) {
 			valToSort.add(s.next());
 		}
-		
+
 		s.close();
 		f.close();
 		return valToSort;
@@ -162,4 +173,4 @@ public class FileHandler {
 
 }
 
- 
+

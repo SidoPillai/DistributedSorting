@@ -3,6 +3,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -86,6 +88,7 @@ public class HandleConnectionRequest extends Thread{
 
 	// In-place sort if an exception occurs
 	private ArrayList<String> inPlaceSort(ArrayList<String> list) {
+		Comparator<String> comp = new Heap();
 		Collections.sort(list, comp);
 		return list;
 	}

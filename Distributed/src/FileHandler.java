@@ -1,12 +1,10 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -76,19 +74,18 @@ public class FileHandler {
 	 * Data buffer of size is read and passed
 	 */
 	ArrayList<String> read(int startIndex, int buff_size) throws IOException, InterruptedException {
-		ios = new FileInputStream(fileName);
+		FileInputStream ios = new FileInputStream(fileName);
 		ArrayList<String> list = new ArrayList<String>();
-		String str;
 		BufferedReader br = new BufferedReader(new InputStreamReader(ios));
 		String s = null;
 
-		for(int i = 0; i < startIndex; ++i) {
+		for(int i = 0; i < startIndex; i++) {
 			br.readLine();
 		}
 
 		int currentPos = 0;
 
-		while(currentPos < buff_size) {
+		while(currentPos < buff_size ) {
 			s = br.readLine();
 			System.out.println("--------------------------------" + s);
 			if(s == null || s.equals("")) {
@@ -98,6 +95,8 @@ public class FileHandler {
 			}
 			currentPos++;
 		}
+
+		br.close();
 		return list;
 
 

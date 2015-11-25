@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.util.Scanner;
 
-/*
+
 public class DistributedSort {
 
 	// start the program by providing the subnet
@@ -12,4 +12,4 @@ public class DistributedSort {
 		String subnet = sc.next();
 		new MainMaster(subnet).start();
 	}
-}*/
+}

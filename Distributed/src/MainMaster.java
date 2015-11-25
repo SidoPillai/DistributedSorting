@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,7 +16,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 //import com.jcraft.jsch.ChannelExec;
 //import com.jcraft.jsch.JSch;
@@ -26,7 +31,7 @@ public class MainMaster {
 	ServerSocket serverSocket;
 
 	// Port to listen from client
-	final int port = 6030;
+	final int port = 6000;
 
 	// list of available of host - stores IP
 	List<String> listOfAvailableHost;
@@ -53,8 +58,87 @@ public class MainMaster {
 
 	// main comparator for in-place sort
 	Comparator<String> comparator = new Comparator<String>() {
-		public int compare(String r1, String r2) {
-			return Heap.myComparator(r1, r2);
+		public int compare(String a, String b) {
+			return a.compareTo(b);
+//			Pattern pattern = Pattern.compile("[a-zA-Z]");
+//			Matcher match;
+//
+//			// take the first characters
+//			int a_first = (int)a.charAt(0);
+//			int b_first = (int)b.charAt(0);
+//			
+//			String sa_1;
+//			String sa_2;
+//			String sb_1;
+//			String sb_2;
+//			
+//			int count;
+//			
+//			if(48 <=a_first && a_first<=57) {
+//				sa_1="";
+//				sa_2 = a;
+//			}
+//			else {
+//				match = pattern.matcher(a);
+//				count=0;
+//				while(match.find()) {
+//					count++;
+//				}
+//				sa_1 = a.substring(0, count);
+//				sa_2 = a.substring(count);
+//			}
+//
+//			if(48<=b_first && b_first<=57) {
+//				sb_1="";
+//				sb_2 = b;
+//			}
+//			else {
+//				match = pattern.matcher(b);
+//				count = 0;
+//				while(match.find()) {
+//					count++;
+//				}
+//				sb_1 = b.substring(0, count);
+//				sb_2 = b.substring(count);	
+//			}
+//
+//			if(a.compareTo(b) == 0) {
+//				return 1;
+//			}
+//			
+//			else {
+//				if(sa_1 != null && sb_1!=null) {
+//					if(sa_1.compareTo(sb_1) < 0) {
+//						return 1;
+//
+//					} else if (sa_1.compareTo(sb_1) > 0) {
+//						return -1;
+//					}
+//
+//					else {
+//						if(!sa_2.equals("") && !sb_2.equals("")) {
+//							int sa_int = Integer.parseInt(sa_2);
+//							int sb_int = Integer.parseInt(sb_2);
+//
+//							if(sa_int < sb_int) {
+//								return 1;
+//							} 
+//							else {
+//								return -1;
+//							}
+//						} else {
+//							if(sa_2.equals("")) {
+//								return 1;
+//							}
+//							else {
+//								return -1;
+//							}
+//						}	
+//					}		
+//				}
+//
+//			}
+//			return 0;	
 		}
 	};
 
@@ -74,6 +158,8 @@ public class MainMaster {
 	public void start() throws IOException, ClassNotFoundException, InterruptedException {
 
 		try{
+			
+			long start = System.currentTimeMillis();
 			serverSocket = new ServerSocket(port);
 
 			System.out.println("Master listening on port " + port);
@@ -129,7 +215,7 @@ public class MainMaster {
 
 			while (true) {
 
-				if(counter < listOfSlaves.size() && limitToRead < noOfChunks-1) {
+				if(counter < listOfSlaves.size() && limitToRead < noOfChunks) {
 
 					if (listOfConnections.get(counter).queue.size() == 0) {
 						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
@@ -139,7 +225,7 @@ public class MainMaster {
 						System.out.println("Added data to chunk");
 					}
 					Thread.sleep(1);
-				} else if (limitToRead < noOfChunks-1) {
+				} else if (limitToRead < noOfChunks) {
 					counter = 0;
 				} else {
 					System.out.println("Data read in complete");
@@ -148,11 +234,15 @@ public class MainMaster {
 			}
 			System.out.println("------MERGING FILE------");
 
-			Thread.sleep(1000);
+			Thread.sleep(100);
+			
 			// File Merging
-			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
-
+//			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
+			
+			mergeSort(files, new File("sid.txt"), comparator);
 			System.out.println("----------DONE----------");
+			
+			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			// Done
 
 			System.exit(0);
@@ -178,13 +268,7 @@ public class MainMaster {
 				onlineHost.add(host);
 			}
 		}
-
 		return onlineHost;
-	}
-
-
-	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
-		new MainMaster().start();
 	}
 
 	// Ping the slaves to get the status
@@ -217,6 +301,10 @@ public class MainMaster {
 
 	}
 
+	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
+		new MainMaster().start();
+	}
+
 	// dividing the file into small blocks
 	public static long estimateBestSizeOfBlocks(File filetobesorted) {
 		long sizeoffile = filetobesorted.length();
@@ -238,6 +326,36 @@ public class MainMaster {
 		return blocksize;
 	}
 
+	public void mergeSort(List<File> inFiles, File outFile, Comparator<String> comparator) throws IOException  {
+
+	      try {
+	         BufferedReader[] readers = new BufferedReader[inFiles.size()];
+	         PrintWriter writer = new PrintWriter(outFile);
+	         TreeMap<String, Integer> treeMap = new TreeMap<String, Integer>(
+	               comparator);
+
+	         // read first line of each file. We don't check for EOF here, probably should
+	         for (int i = 0; i < inFiles.size(); i++) {
+	            readers[i] = new BufferedReader(new FileReader(inFiles.get(i)));
+	            String line = readers[i].readLine();
+	            treeMap.put(line, Integer.valueOf(i));
+	         }
+
+	         while (!treeMap.isEmpty()) {
+	            Map.Entry<String, Integer> nextToGo = treeMap.pollFirstEntry();
+	            int fileIndex = nextToGo.getValue().intValue();
+	            writer.println(nextToGo.getKey());
+
+	            String line = readers[fileIndex].readLine();
+	            if (line != null)
+	               treeMap.put(line, Integer.valueOf(fileIndex));
+	         }
+	      }
+	      finally {
+	         // close everything here...
+	      }
+	   }
+	
 	// merging the sorted file
 	public int mergeSortedFiles(List<File> files, File outputfile, final Comparator<String> cmp) throws IOException {
 

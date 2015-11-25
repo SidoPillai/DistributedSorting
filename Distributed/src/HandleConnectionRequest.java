@@ -7,20 +7,103 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HandleConnectionRequest extends Thread{
-	
+
 	// Member variables
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
-	
+
 	// Reference of master to store the files
 	MainMaster master;
-	
+
 	// main comparator for in-place sort
+
 	Comparator<String> comparator = new Comparator<String>() {
-		public int compare(String r1, String r2) {
-			return Heap.myComparator(r1, r2);
+		public int compare(String a, String b) {
+			return a.compareTo(b);
+//			Pattern pattern = Pattern.compile("[a-zA-Z]");
+//			Matcher match;
+//
+//			// take the first characters
+//			int a_first = (int)a.charAt(0);
+//			int b_first = (int)b.charAt(0);
+//
+//			String sa_1;
+//			String sa_2;
+//			String sb_1;
+//			String sb_2;
+//
+//			int count;
+//
+//			// check if the prefix is a number
+//			if(48 <= a_first && a_first <= 57) {
+//				sa_1 = "";
+//				sa_2 = a;
+//			}
+//
+//			else {
+//				match = pattern.matcher(a);
+//				count = 0;
+//				while(match.find()) {
+//					count++;
+//				}
+//				sa_1 = a.substring(0, count);
+//				sa_2 = a.substring(count);
+//			}
+//
+//			if(48 <= b_first && b_first <= 57) {
+//				sb_1 = "";
+//				sb_2 = b;
+//			}
+//			else {
+//				match = pattern.matcher(b);
+//				count = 0;
+//				while(match.find()) {
+//					count++;
+//				}
+//				sb_1 = b.substring(0, count);
+//				sb_2 = b.substring(count);	
+//			}
+//
+//			if(a.compareTo(b) == 0) {
+//				return 1;
+//			}
+//
+//			else {
+//				if(sa_1 != null && sb_1 != null) {
+//					if(sa_1.compareTo(sb_1) < 0) {
+//						return 1;
+//
+//					} else if (sa_1.compareTo(sb_1) > 0) {
+//						return -1;
+//					}
+//
+//					else {
+//						if(!sa_2.equals("") && !sb_2.equals("")) {
+//							int sa_int = Integer.parseInt(sa_2);
+//							int sb_int = Integer.parseInt(sb_2);
+//
+//							if(sa_int < sb_int) {
+//								return 1;
+//							} 
+//							else {
+//								return -1;
+//							}
+//						} else {
+//							if(sa_2.equals("")) {
+//								return 1;
+//							}
+//							else {
+//								return -1;
+//							}
+//						}	
+//					}		
+//				}
+//			}
+//			return 1;	
 		}
 	};
 
@@ -55,15 +138,15 @@ public class HandleConnectionRequest extends Thread{
 		System.out.println("I am Slave Number " + index);
 
 		while(true) {
-			
+
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
-			
+
 			if (!this.queue.isEmpty()) {
-				
+
 				System.out.println("Time to send the data now");
 				ArrayList<String> list = null;
 
@@ -94,12 +177,14 @@ public class HandleConnectionRequest extends Thread{
 					sortedData = inPlaceSort(list);
 				}
 
+				System.out.println(sortedData.size() + " Elements in the list--------");
+				
 				// add the sorted data in the list of files
-					try {
-						master.files.add(master.manageSortedArrays(sortedData));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				try {
+					master.files.add(master.manageSortedArrays(sortedData));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 
 				System.out.println("Added to sorted data");
 			}

@@ -19,15 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-//import com.jcraft.jsch.ChannelExec;
-//import com.jcraft.jsch.JSch;
-//import com.jcraft.jsch.Session;
 
 public class MainMaster {
 
+	// Server socket
 	ServerSocket serverSocket;
 
 	// Port to listen from client
@@ -62,85 +57,6 @@ public class MainMaster {
 	Comparator<String> comparator = new Comparator<String>() {
 		public int compare(String a, String b) {
 			return a.compareTo(b);
-//			Pattern pattern = Pattern.compile("[a-zA-Z]");
-//			Matcher match;
-//
-//			// take the first characters
-//			int a_first = (int)a.charAt(0);
-//			int b_first = (int)b.charAt(0);
-//			
-//			String sa_1;
-//			String sa_2;
-//			String sb_1;
-//			String sb_2;
-//			
-//			int count;
-//			
-//			if(48 <=a_first && a_first<=57) {
-//				sa_1="";
-//				sa_2 = a;
-//			}
-//			else {
-//				match = pattern.matcher(a);
-//				count=0;
-//				while(match.find()) {
-//					count++;
-//				}
-//				sa_1 = a.substring(0, count);
-//				sa_2 = a.substring(count);
-//			}
-//
-//			if(48<=b_first && b_first<=57) {
-//				sb_1="";
-//				sb_2 = b;
-//			}
-//			else {
-//				match = pattern.matcher(b);
-//				count = 0;
-//				while(match.find()) {
-//					count++;
-//				}
-//				sb_1 = b.substring(0, count);
-//				sb_2 = b.substring(count);	
-//			}
-//
-//			if(a.compareTo(b) == 0) {
-//				return 1;
-//			}
-//			
-//			else {
-//				if(sa_1 != null && sb_1!=null) {
-//					if(sa_1.compareTo(sb_1) < 0) {
-//						return 1;
-//
-//					} else if (sa_1.compareTo(sb_1) > 0) {
-//						return -1;
-//					}
-//
-//					else {
-//						if(!sa_2.equals("") && !sb_2.equals("")) {
-//							int sa_int = Integer.parseInt(sa_2);
-//							int sb_int = Integer.parseInt(sb_2);
-//
-//							if(sa_int < sb_int) {
-//								return 1;
-//							} 
-//							else {
-//								return -1;
-//							}
-//						} else {
-//							if(sa_2.equals("")) {
-//								return 1;
-//							}
-//							else {
-//								return -1;
-//							}
-//						}	
-//					}		
-//				}
-//
-//			}
-//			return 0;	
 		}
 	};
 
@@ -151,6 +67,7 @@ public class MainMaster {
 
 	public MainMaster() {
 		listOfSlaves = new ArrayList<Socket>();
+		listOfAvailableHost = new ArrayList<>();
 	}
 
 	MainMaster(String subnet) {
@@ -166,31 +83,12 @@ public class MainMaster {
 
 			System.out.println("Master listening on port " + port);
 
-			// check for no of  host in the network
-			//listOfAvailableHost = checkHosts(subnet);
-
-			// send the source files
-			//for (String host : listOfAvailableHost) {
-			//				sendFiles(host);
-			//			}
-
-
-			// wait for the connection requests
-			//			for(int count = 0; count < listOfAvailableHost.size(); ++count) {	
-
-			for (int count = 0; count < 3; count++) {								
-				Socket socket = serverSocket.accept();
-				System.out.println("Accepted one node");
-				listOfSlaves.add(socket);
-				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
-				listOfConnections.add(conn);
-				conn.start();
-				filestoSort.add(null);
-				System.out.println("Node: " + (count+1) + " connected");
-			}
-
-			System.out.println("All nodes are now connected..");
-
+			// Gets the IP from the file
+			readIP();
+			
+			// Establish connection with the clients
+			connect();
+			
 			// start pinging once all the nodes are connected
 			new Ping().start();
 
@@ -199,7 +97,7 @@ public class MainMaster {
 			File file = new File("new_dataset_10000.txt");
 			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 100;
-			int chunksize = (int)noOfLines/noOfChunks;
+			int chunksize = (int) noOfLines/noOfChunks;
 			System.out.println("Estimated block size " + estimateBestSizeOfBlocks(file));
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
@@ -236,12 +134,12 @@ public class MainMaster {
 			}
 			System.out.println("------MERGING FILE------");
 
-			Thread.sleep(100);
+			Thread.sleep(5000);
 			
 			// File Merging
 //			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"), comparator);
 			
-			mergeSort(files, new File("sid.txt"), comp);
+			mergeSort(files, new File("output_10000.txt"), comp);
 			System.out.println("----------DONE----------");
 			
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
@@ -255,6 +153,40 @@ public class MainMaster {
 		} finally {
 			serverSocket.close();
 		}
+	}
+
+	private void connect() throws IOException {
+
+		for (int count = 0; count < listOfAvailableHost.size(); count++) {								
+			Socket socket = serverSocket.accept();
+			System.out.println("Accepted one node");
+			listOfSlaves.add(socket);
+			HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
+			listOfConnections.add(conn);
+			conn.start();
+			filestoSort.add(null);
+			System.out.println("Node: " + (count+1) + " connected");
+		}
+
+		System.out.println("All nodes are now connected..");
+	}
+
+	// Reads the IP from the file
+	private void readIP() throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader("check.txt"));
+		String currentLine;
+		
+		for (String line = br.readLine(); line != null; line = br.readLine()) {
+			System.out.println(line + "IP");
+			listOfAvailableHost.add(line);
+		}
+		
+//		while ((currentLine = br.readLine()) != null) {
+//			System.out.println(currentLine + "IP");
+//			listOfAvailableHost.add(currentLine);
+//		}
+		
+		br.close();
 	}
 
 	// looks for the host in the network and adds inti the list of online devices 

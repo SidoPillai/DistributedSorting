@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
 
 /**
@@ -37,39 +36,6 @@ public class FileHandler {
 		this.buff_size = buff_size;
 	}
 
-	/**
-	 * Extract a chunk from a file
-	 * 
-	 * @param fileName          name of the file to read from
-	 * @param startPosition     start position for reading
-	 * @param size              number of bytes to read
-	 * @return                  byte[] containing bytes read. 
-	 */
-	public static byte[] getChunk(String fileName, int startPosition, int size) {
-		byte[] bytes = null;
-		try {
-			RandomAccessFile raFile = new RandomAccessFile(fileName, "r");
-			FileChannel fc = raFile.getChannel();
-			fc.position(startPosition);
-			ByteBuffer buf = ByteBuffer.allocate(size);
-			int bytesRead = fc.read(buf);
-			if(bytesRead > 0) {
-				bytes = Arrays.copyOf(buf.array(), bytesRead);
-			} else if (bytesRead == -1) {
-				System.out.println("end of file");
-			} else {
-				System.out.println(fileName + " " + startPosition + " " + size);
-				System.out.println("No bytes read!");
-			}
-			raFile.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return bytes;
-	}
-
 	/*
 	 * Data buffer of size is read and passed
 	 */
@@ -87,7 +53,7 @@ public class FileHandler {
 
 		while(currentPos < buff_size ) {
 			s = br.readLine();
-			System.out.println("--------------------------------" + s);
+//			System.out.println("--------------------------------" + s);
 			if(s == null || s.equals("")) {
 
 			} else {
@@ -98,45 +64,6 @@ public class FileHandler {
 
 		br.close();
 		return list;
-
-
-		//		ArrayList<String> list = new ArrayList<String>();
-		//		LineNumberReader br = new LineNumberReader(new InputStreamReader(ios));
-		//		String s = null;
-		//		br.setLineNumber(startIndex);
-		//		int currentPos = 0;
-		//
-		//		while(currentPos < buff_size) {
-		//			s = br.readLine();
-		//			if(s == null || s.equals("")) {
-		//				currentPos++;
-		//			} else { 
-		//				System.out.println("--------------------------------" + s);
-		//				list.add(s);
-		//				currentPos++;
-		//			}
-		//		}
-		//		return list;
-	}
-
-	/**
-	 * Write on the file for the filename provided
-	 * @param fileName
-	 * @param startPosition
-	 * @param bytes
-	 */
-	public static void writeToFile(String fileName, int startPosition, byte[] bytes) {
-		try {
-			RandomAccessFile raFile = new RandomAccessFile(fileName, "rw");
-			FileChannel fc = raFile.getChannel();
-			ByteBuffer buf = ByteBuffer.wrap(bytes);
-			fc.write(buf, startPosition);
-			raFile.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static ArrayList<String> getData() throws IOException {

@@ -342,6 +342,7 @@ public class MainMaster {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
+	    System.out.println("hiii");
 		new MainMaster().start();
 	}
 

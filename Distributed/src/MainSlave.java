@@ -29,8 +29,8 @@ public class MainSlave {
 			socket = new Socket(serverAddress, serverPort);
 			System.out.println("Connecting to server at " + serverAddress + " on port " + serverPort);
 
-			input = new ObjectInputStream(this.socket.getInputStream());
-			output = new ObjectOutputStream(this.socket.getOutputStream());
+			input = new ObjectInputStream(socket.getInputStream());
+			output = new ObjectOutputStream(socket.getOutputStream());
 
 			while(true) {
 				System.out.println("Waiting for input");

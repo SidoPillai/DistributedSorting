@@ -17,8 +17,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -43,6 +45,8 @@ public class MainMaster {
 	// flag to indicate when to start sending to client
 	static volatile boolean flag = false;
 
+	static Boolean f = false;
+
 	// List of list of string which are set out to sort
 	List<ArrayList<String>> filestoSort = new ArrayList<ArrayList<String>>();
 
@@ -55,12 +59,21 @@ public class MainMaster {
 	// List of sorted files
 	List<File> files = new ArrayList<File>();
 
+	// List of ConnectionHandlers
+	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
+
 	// main comparator for in-place sort
-	Comparator<String> comparator = new Comparator<String>() {
-		public int compare(String r1, String r2) {
-			return Heap.myComparator(r1, r2);
-		}
-	};
+		Comparator<String> comparator = new Comparator<String>() {
+			public int compare(String r1, String r2) {
+				return Heap.myComparator(r1, r2);
+			}
+		};
+
+//	Comparator<String> comparator = new Comparator<String>() {
+//		public int compare(String r1, String r2) {
+//			return compare(r1, r2);
+//		}
+//	};
 
 	// Data to sort 
 	List<String> dataToSort;
@@ -105,16 +118,20 @@ public class MainMaster {
 			//			for(int count = 0; count < listOfAvailableHost.size(); ++count) {	
 
 
-			for(int count = 0; count < 3; ++count) {								
+
+			for(int count = 0; count < 3; count++) {								
 				Socket socket = serverSocket.accept();
 				System.out.println("Accepted one node");
-				new HandleTCPRequest(socket, count).start();
 				listOfSlaves.add(socket);
+				HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
+				listOfConnections.add(conn);
+				conn.start();
+				filestoSort.add(null);
 				System.out.println("Node: " + (count+1) + " connected");
 			}
 
 			System.out.println("All nodes are now connected..");
-			
+
 			// start pinging once all the nodes are connected
 			new Ping().start();
 
@@ -136,16 +153,21 @@ public class MainMaster {
 
 			System.out.println("Adding data to chunks");
 
+			int counter = 0;
+
 			while (true) {
-				synchronized(filestoSort) {
-					if (i < noOfChunks) {
-						if(filestoSort.size() == 0) {
-							filestoSort.add(handler.read(i*chunksize, chunksize));
-							i++;
-							flag = true;
-							System.out.println("Added data to chunk");
-						}
+
+				if(counter < listOfSlaves.size()) {
+					
+					if (listOfConnections.get(counter).queue.size() == 0) {
+						listOfConnections.get(counter).queue.add(handler.read(i*chunksize, chunksize));
+						counter++;
+						i++;
+						System.out.println("Added data to chunk");
 					}
+					
+				} else {
+					counter = 0;
 				}
 			}
 
@@ -204,111 +226,7 @@ public class MainMaster {
 		new MainMaster().start();
 	}
 
-	/**
-	 * This class is responsible to accept the TCP requests.
-	 * 
-	 * @author Siddesh Pillai
-	 */
-	private class HandleTCPRequest extends Thread {
-
-		// Member variables
-		private Socket serverSocketTCP;
-		private ObjectInputStream in;
-		private ObjectOutputStream out;
-
-		ArrayList<String> sortedData; 
-		/**
-		 * Constructor
-		 * @param socket
-		 */
-		public HandleTCPRequest(Socket socket, int slaveNumber) {
-			this.serverSocketTCP = socket;
-
-			try {
-				out = new ObjectOutputStream(this.serverSocketTCP.getOutputStream());
-				in = new ObjectInputStream(this.serverSocketTCP.getInputStream());
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
-		}
-
-		/**
-		 * The run method
-		 */
-		@SuppressWarnings("unchecked")
-		public void run() {
-
-			try {
-
-				while(true) {
-
-					if (MainMaster.flag) {
-						System.out.println("Time to send the data now");
-						ArrayList<String> list = null;
-
-						try {
-
-							synchronized (filestoSort) {
-								if (filestoSort.size() > 0) {
-									Iterator<ArrayList<String>> iter = filestoSort.iterator();
-
-									// removed from the list
-									while (iter.hasNext()) {
-										list = iter.next();
-										iter.remove();							
-									}
-
-									// technically list at this point should be be null.
-									// If its null means it has read all the content of the file
-									if(list != null) {
-
-										// sending the list out to sort
-										out.writeObject(list);
-										System.out.println("Sent the chunks to the client");
-									}
-								} 
-							}
-
-							// will wait for the sorted arraylist from the slaves
-							sortedData = (ArrayList<String>) in.readObject();
-							System.out.println("Receieved the sorted data");
-
-						} catch(Exception e) {
-
-							// in case if an interupption occurs the load is handled here
-							sortedData = inPlaceSort(list);
-						}
-
-						// add the sorted data in the list of files
-						synchronized (files) {
-							files.add(manageSortedArrays(sortedData));
-						}
-
-						System.out.println("Added to sorted data");
-						//						break;
-					}
-
-				}
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					// closing the socket
-					this.serverSocketTCP.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		// In-place sort if an exception occurs
-		private ArrayList<String> inPlaceSort(ArrayList<String> list) {
-			Collections.sort(list,comparator);
-			return list;
-		}
-	}
-
+	// Ping the slaves to get the status
 	private class Ping extends Thread {
 
 		public void run() {
@@ -337,6 +255,7 @@ public class MainMaster {
 		}
 
 	}
+	
 	// dividing the file into small blocks
 	public static long estimateBestSizeOfBlocks(File filetobesorted) {
 		long sizeoffile = filetobesorted.length();

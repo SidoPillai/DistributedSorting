@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MainSlaveTask2 {
+public class SlaveTask2 {
 
 	private Socket socket;
 	private ObjectInputStream input;
@@ -23,7 +23,7 @@ public class MainSlaveTask2 {
 	HashMap<String, Integer> count_map = new HashMap<String, Integer>();
 
 	// Constructor
-	public MainSlaveTask2(String serverAddress, int serverPort) {
+	public SlaveTask2(String serverAddress, int serverPort) {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 	}
@@ -97,7 +97,7 @@ public class MainSlaveTask2 {
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException {
-		new MainSlave("localhost", 6000).start();
+		new SlaveTask1("localhost", 6000).start();
 	}
 
 }

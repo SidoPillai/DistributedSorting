@@ -8,14 +8,14 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 
-public class HandleConnectionRequest extends Thread{
+public class HandleTask1ConnectionRequest extends Thread{
 
 	// Member variables
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 
 	// Reference of master to store the files
-	MainMaster master;
+	Master master;
 
 	int index;
 	public Deque<ArrayList<String>> queue;
@@ -23,7 +23,7 @@ public class HandleConnectionRequest extends Thread{
 	ArrayList<String> sortedData; 
 
 	// Constructor
-	public HandleConnectionRequest(Socket socket, int index, MainMaster master) {
+	public HandleTask1ConnectionRequest(Socket socket, int index, Master master) {
 		this.index = index;
 		queue = new LinkedList<ArrayList<String>>();
 		this.master = master;

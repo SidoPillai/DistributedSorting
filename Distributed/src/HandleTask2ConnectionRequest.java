@@ -14,7 +14,7 @@ public class HandleTask2ConnectionRequest extends Thread{
 	private ObjectOutputStream oos;
 
 	// Reference of master to store the files
-	MainMaster master;
+	Master master;
 
 	int index;
 	public Deque<ArrayList<String>> queue;
@@ -26,7 +26,7 @@ public class HandleTask2ConnectionRequest extends Thread{
 	 * Constructor
 	 * @param socket
 	 */
-	public HandleTask2ConnectionRequest(Socket socket, int index, MainMaster master) {
+	public HandleTask2ConnectionRequest(Socket socket, int index, Master master) {
 		this.index = index;
 		queue = new LinkedList<ArrayList<String>>();
 		this.master = master;

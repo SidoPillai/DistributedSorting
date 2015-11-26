@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-public class MainSlave {
+public class SlaveTask1 {
 
 	// Member Variables
 	private Socket socket;
@@ -24,7 +24,7 @@ public class MainSlave {
 	static PriorityQueue<String> prq;
 
 	// Constructor
-	public MainSlave(String serverAddress, int serverPort) {
+	public SlaveTask1(String serverAddress, int serverPort) {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 		comp = new Heap();
@@ -82,7 +82,7 @@ public class MainSlave {
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException {
-		new MainSlave("localhost", 6000).start();
+		new SlaveTask1("localhost", 6000).start();
 	}
 	
 }

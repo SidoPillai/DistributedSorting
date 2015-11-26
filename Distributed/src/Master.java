@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
-public class MainMaster {
+public class Master {
 
 	// Server socket
 	ServerSocket serverSocket;
@@ -42,7 +42,7 @@ public class MainMaster {
 	HashMap<String, Integer> count_map = new HashMap<String, Integer>();
 
 	// List of ConnectionHandlers
-	List<HandleConnectionRequest> listOfConnections = new ArrayList<HandleConnectionRequest>();
+	List<HandleTask1ConnectionRequest> listOfConnections = new ArrayList<HandleTask1ConnectionRequest>();
 
 	// List of ConnectionHandlers for Task 2
 	List<HandleTask2ConnectionRequest> listOfConnectionsTask2 = new ArrayList<HandleTask2ConnectionRequest>();
@@ -56,7 +56,7 @@ public class MainMaster {
 	List<List<String>> sortedChunks = new ArrayList<List<String>>();
 
 	// Constructor
-	public MainMaster() {
+	public Master() {
 		listOfSlaves = new ArrayList<Socket>();
 		listOfAvailableHost = new ArrayList<>();
 	}
@@ -68,12 +68,16 @@ public class MainMaster {
 			long start = System.currentTimeMillis();
 			serverSocket = new ServerSocket(port);
 			System.out.println("Master listening on port " + port);
+
 			// Gets the IP from the file
 			readIP();
+
 			// Establish connection with the clients
 			connectTask1();
+
 			// start pinging once all the nodes are connected
 			//			new Ping().start();
+
 			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 1000;
 			int chunksize = (int) noOfLines/noOfChunks;
@@ -125,7 +129,7 @@ public class MainMaster {
 			serverSocket.close();
 		}
 	}
-	
+
 	// Task 2
 	public void startTask2() throws InterruptedException, IOException {
 		try{
@@ -148,7 +152,7 @@ public class MainMaster {
 			}
 
 			// start pinging once all the nodes are connected
-			//			new Ping().start();
+			new Ping().start();
 
 			long noOfLines = countLines("new_dataset_10000.txt");
 			int noOfChunks = 1000;
@@ -204,7 +208,7 @@ public class MainMaster {
 		for (int count = 0; count < listOfAvailableHost.size(); count++) {								
 			Socket socket = serverSocket.accept();
 			listOfSlaves.add(socket);
-			HandleConnectionRequest conn = new HandleConnectionRequest(socket, count, this); 
+			HandleTask1ConnectionRequest conn = new HandleTask1ConnectionRequest(socket, count, this); 
 			listOfConnections.add(conn);
 			conn.start();
 		}
@@ -335,7 +339,7 @@ public class MainMaster {
 				}
 				countNoFile = 0;
 				String r;
-				
+
 				while(!prq.isEmpty()) {
 					r = prq.poll();
 					fbw.write(r);
@@ -446,9 +450,9 @@ public class MainMaster {
 		Scanner sc = new Scanner(System.in);
 		String choice = sc.next();
 		if (choice.equals("1")) {
-			new MainMaster().startTask1();
+			new Master().startTask1();
 		} else {
-			new MainMaster().startTask2();
+			new Master().startTask2();
 		}
 		sc.close();
 	}

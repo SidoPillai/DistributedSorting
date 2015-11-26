@@ -82,7 +82,7 @@ public class SlaveTask1 {
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException {
-		new SlaveTask1("localhost", 6000).start();
+		new SlaveTask1("10.10.10.105", 6000).start();
 	}
 	
 }

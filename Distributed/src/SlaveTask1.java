@@ -20,6 +20,7 @@ public class SlaveTask1 {
 	ArrayList<String> sortedList;
 	
 	static Comparator<String> comp;
+	QuickSort qsort = new QuickSort();
 
 	// Constructor
 	public SlaveTask1(String serverAddress, int serverPort) {
@@ -42,23 +43,18 @@ public class SlaveTask1 {
 				// read the arraylist
 				inputList = (ArrayList<String>) input.readObject();
 				// sort the array list
-//				Collections.sort(inputList, comp);
-				QuickSort.quickSort(inputList, 0, inputList.size());
+				Collections.sort(inputList, comp);
+//				qsort.quickSort(inputList, 0, inputList.size());
 				// send the sorted list back to the server
 				output.writeObject(inputList);
 			}
 
-		} catch (UnknownHostException e) {
-//			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
+			System.out.println("Exception here " + e.getMessage());
 //			e.printStackTrace();
 		} finally {
-			try {
-				socket.close();
-				System.exit(0);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			//				socket.close();
+//			System.exit(0);
 		}
 	}
 	

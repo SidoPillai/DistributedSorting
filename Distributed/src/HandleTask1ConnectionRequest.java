@@ -21,6 +21,8 @@ public class HandleTask1ConnectionRequest extends Thread{
 	public Deque<ArrayList<String>> queue;
 
 	ArrayList<String> sortedData; 
+	
+	static Comparator<String> comp = new AlphanumComparator();
 
 	// Constructor
 	public HandleTask1ConnectionRequest(Socket socket, int index, Master master) {
@@ -71,7 +73,7 @@ public class HandleTask1ConnectionRequest extends Thread{
 					// will wait for the sorted arraylist from the slaves
 					sortedData = (ArrayList<String>) ois.readObject();
 				} catch(Exception e) {
-
+					System.out.println("Exception....." + e.getMessage());
 					// in case if an interupption occurs the load is handled here
 					sortedData = inPlaceSort(list);
 				}
@@ -88,8 +90,9 @@ public class HandleTask1ConnectionRequest extends Thread{
 
 	// In-place sort if an exception occurs
 	private ArrayList<String> inPlaceSort(ArrayList<String> list) {
-		Comparator<String> comp = new Heap();
 		Collections.sort(list, comp);
+//		Comparator<String> comp = new Heap();
+//		Collections.sort(list, comp);
 		return list;
 	}
 }

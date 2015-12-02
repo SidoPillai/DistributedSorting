@@ -1,7 +1,8 @@
 import java.util.Comparator;
 
 public class AlphanumComparator implements Comparator<String> {
-    private final boolean isDigit(char ch) {
+    
+	private final boolean isDigit(char ch) {
         return ch >= 48 && ch <= 57;
     }
 

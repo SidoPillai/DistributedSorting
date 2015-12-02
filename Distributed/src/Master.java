@@ -83,7 +83,7 @@ public class Master {
 			// start pinging once all the nodes are connected
 			//			new Ping().start();
 
-			long noOfLines = countLines("new_dataset_10000.txt");
+			long noOfLines = countLines("new_dataset_1M.txt");
 			int noOfChunks = 100;
 			int chunksize = (int) noOfLines/noOfChunks;
 
@@ -92,7 +92,7 @@ public class Master {
 			System.out.println("Size of each chunk " + chunksize);
 
 			// handler to read line by line
-			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
+			FileHandler handler = new FileHandler("new_dataset_1M.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;

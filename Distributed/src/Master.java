@@ -23,7 +23,7 @@ import java.util.Scanner;
 public class Master {
 
 	// Comparator
-	Comparator c = new AlphanumComparator();
+	Comparator<String> c = new AlphanumComparator();
 
 	// Server socket
 	ServerSocket serverSocket;
@@ -122,8 +122,8 @@ public class Master {
 			System.out.println("------ MERGING SORTED FILES ------");
 			Thread.sleep(500);
 			// File Merging
-			//			mergeSortedFiles(files, new File("lalala.txt"));
-			merger(files, new File("lalalulu.txt"));
+			mergeSortedFiles(files, new File("lalala.txt"));
+//			merger(files, new File("lalalulu.txt"));
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			// Done
 			System.out.println("-------------- DONE --------------");
@@ -302,9 +302,8 @@ public class Master {
 	// Merging the sorted files
 	public void mergeSortedFiles(List<File> files, File outputfile) throws IOException {
 
-		Comparator<String> comp = new Heap();
 		List <BinaryFileBuffer> alist = new ArrayList<BinaryFileBuffer>();
-		PriorityQueue<String> prq = new PriorityQueue<String>(10,comp); // For sorting elements.
+		PriorityQueue<String> prq = new PriorityQueue<String>(10,c); // For sorting elements.
 
 		BufferedWriter fbw = new BufferedWriter(new FileWriter(outputfile));
 		int countNoFile = 0;
@@ -360,7 +359,7 @@ public class Master {
 			}
 		} finally { 
 			fbw.close();
-			comp = null;
+//			comp = null;
 			alist = null;
 			prq = null;
 		}

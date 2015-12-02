@@ -19,10 +19,8 @@ public class AlphanumComparator implements Comparator<String> {
                 chunk.append(c);
                 marker++;
             }
-        } else
-        {
-            while (marker < slength)
-            {
+        } else {
+            while (marker < slength) {
                 c = s.charAt(marker);
                 if (isDigit(c))
                     break;
@@ -33,15 +31,13 @@ public class AlphanumComparator implements Comparator<String> {
         return chunk.toString();
     }
 
-    public int compare(String s1, String s2)
-    {
+    public int compare(String s1, String s2) {
         int thisMarker = 0;
         int thatMarker = 0;
         int s1Length = s1.length();
         int s2Length = s2.length();
 
-        while (thisMarker < s1Length && thatMarker < s2Length)
-        {
+        while (thisMarker < s1Length && thatMarker < s2Length) {
             String thisChunk = getChunk(s1, s1Length, thisMarker);
             thisMarker += thisChunk.length();
 
@@ -50,25 +46,20 @@ public class AlphanumComparator implements Comparator<String> {
 
             // If both chunks contain numeric characters, sort them numerically
             int result = 0;
-            if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0)))
-            {
+            if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0))) {
                 // Simple chunk comparison by length.
                 int thisChunkLength = thisChunk.length();
                 result = thisChunkLength - thatChunk.length();
                 // If equal, the first different number counts
-                if (result == 0)
-                {
-                    for (int i = 0; i < thisChunkLength; i++)
-                    {
+                if (result == 0) {
+                    for (int i = 0; i < thisChunkLength; i++) {
                         result = thisChunk.charAt(i) - thatChunk.charAt(i);
-                        if (result != 0)
-                        {
+                        if (result != 0) {
                             return result;
                         }
                     }
                 }
-            } else
-            {
+            } else {
                 result = thisChunk.compareTo(thatChunk);
             }
 

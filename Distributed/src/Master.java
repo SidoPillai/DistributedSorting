@@ -43,7 +43,7 @@ public class Master {
 	// Sum Map
 	HashMap<String, Integer> sum_map = new HashMap<String, Integer>();
 
-	// prefix occurencesmap
+	// prefix occurrences map
 	HashMap<String, Integer> count_map = new HashMap<String, Integer>();
 
 	// List of ConnectionHandlers
@@ -472,11 +472,11 @@ public class Master {
 		return blocksize;
 	}
 
+	// file delimiter
 	private String empty = "";
 
 	private ArrayList<Scanner> getScanners(ArrayList<File> allFiles) throws FileNotFoundException{
 		ArrayList<Scanner> scanners = new ArrayList<Scanner>();
-		//		System.out.println("Size of ALL FILES" + allFiles);
 		for(File f : allFiles){
 			if(f!=null) {
 				Scanner sc = new Scanner(f);
@@ -493,14 +493,10 @@ public class Master {
 	}
 
 	private int getMin(String[] values){
-		//		Comparator comp = new Heap();
 		String min = empty;
 		int minindex = -1;
 		int index = 0;
-		//		System.out.println(values);
-		//		for (String s: values) {
-		//			System.out.println(s);
-		//		}
+
 		for(String value : values){
 			if(!value.equals(empty) && value!= null){
 				if(c.compare(value,min) < 0 || min.equals(empty)){
@@ -510,7 +506,6 @@ public class Master {
 			}
 			index++;
 		}
-
 		return minindex;
 	}
 
@@ -538,17 +533,12 @@ public class Master {
 
 	private void merger(ArrayList<File> allFiles, File outputfile) throws IOException {
 
-		//		System.out.println("Called");
 		ArrayList<Scanner> scanners = getScanners(allFiles);
 		String[] values = getValues(scanners);
 
 		PrintWriter out = new PrintWriter(outputfile);
-		//		System.out.println("started");
 		int index = getMin(values);
-		//		System.out.println("1st index "+index );
 		while(index!=-1){
-			//			System.out.println(index);
-			//			System.out.println("wrote " + values[index]);
 			out.println(values[index]);			
 			updateValues(values, index, scanners);
 			index = getMin(values);

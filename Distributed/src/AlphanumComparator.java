@@ -1,6 +1,6 @@
 import java.util.Comparator;
 
-public class AlphanumComparator implements Comparator {
+public class AlphanumComparator implements Comparator<String> {
     private final boolean isDigit(char ch) {
         return ch >= 48 && ch <= 57;
     }
@@ -33,15 +33,8 @@ public class AlphanumComparator implements Comparator {
         return chunk.toString();
     }
 
-    public int compare(Object o1, Object o2)
+    public int compare(String s1, String s2)
     {
-        if (!(o1 instanceof String) || !(o2 instanceof String))
-        {
-            return 0;
-        }
-        String s1 = (String)o1;
-        String s2 = (String)o2;
-
         int thisMarker = 0;
         int thatMarker = 0;
         int s1Length = s1.length();

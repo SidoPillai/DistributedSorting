@@ -3,10 +3,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,6 +21,9 @@ import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class Master {
+
+	// Comparator
+	Comparator c = new AlphanumComparator();
 
 	// Server socket
 	ServerSocket serverSocket;
@@ -33,7 +38,7 @@ public class Master {
 	List<Socket> listOfSlaves;
 
 	// List of sorted files
-	List<File> files = new ArrayList<File>();
+	ArrayList<File> files = new ArrayList<File>();
 
 	// Sum Map
 	HashMap<String, Integer> sum_map = new HashMap<String, Integer>();
@@ -64,7 +69,7 @@ public class Master {
 	// Task 1
 	public void startTask1() throws IOException, ClassNotFoundException, InterruptedException {
 
-		try{
+		try {
 			long start = System.currentTimeMillis();
 			serverSocket = new ServerSocket(port);
 			System.out.println("Master listening on port " + port);
@@ -78,8 +83,8 @@ public class Master {
 			// start pinging once all the nodes are connected
 			//			new Ping().start();
 
-			long noOfLines = countLines("new_dataset_10000.txt");
-			int noOfChunks = 1000;
+			long noOfLines = countLines("new_dataset_1M.txt");
+			int noOfChunks = 100;
 			int chunksize = (int) noOfLines/noOfChunks;
 
 			System.out.println("Number of lines in the file " + noOfLines);
@@ -87,7 +92,7 @@ public class Master {
 			System.out.println("Size of each chunk " + chunksize);
 
 			// handler to read line by line
-			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
+			FileHandler handler = new FileHandler("new_dataset_1M.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;
@@ -112,10 +117,13 @@ public class Master {
 				}
 			}
 
+			System.out.println("Before Merging " + (System.currentTimeMillis()-start)/1000 + " seconds");
+
 			System.out.println("------ MERGING SORTED FILES ------");
 			Thread.sleep(500);
 			// File Merging
-			mergeSortedFiles(files, new File("output_file_sorted_10000.txt"));
+			//			mergeSortedFiles(files, new File("lalala.txt"));
+			merger(files, new File("lalalulu.txt"));
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			// Done
 			System.out.println("-------------- DONE --------------");
@@ -127,6 +135,7 @@ public class Master {
 			return;
 		} finally {
 			serverSocket.close();
+			//			System.exit(0);
 		}
 	}
 
@@ -154,7 +163,7 @@ public class Master {
 			// start pinging once all the nodes are connected
 			new Ping().start();
 
-			long noOfLines = countLines("new_dataset_10000.txt");
+			long noOfLines = countLines("new_dataset_1B.txt");
 			int noOfChunks = 1000;
 			int chunksize = (int) noOfLines/noOfChunks;
 
@@ -163,7 +172,7 @@ public class Master {
 			System.out.println("Size of each chunk " + chunksize);
 
 			// handler to read line by line
-			FileHandler handler = new FileHandler("new_dataset_10000.txt", chunksize);
+			FileHandler handler = new FileHandler("new_dataset_1B.txt", chunksize);
 
 			// Read data one by one
 			int i = 0;
@@ -231,7 +240,7 @@ public class Master {
 
 	// Reads the IP from the file
 	private void readIP() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader("check.txt"));
+		BufferedReader br = new BufferedReader(new FileReader("ip.txt"));
 
 		for (String line = br.readLine(); line != null; line = br.readLine()) {
 			System.out.println("Pinging... " + line);
@@ -440,6 +449,121 @@ public class Master {
 		file_out.close();
 	}
 
+	public static long estimateAvailableMemory() {
+		System.gc();
+		return Runtime.getRuntime().freeMemory();
+	}
+
+	public static long estimateBestSizeOfBlocks(final long sizeoffile,
+			final int maxtmpfiles, final long maxMemory) {
+		// we don't want to open up much more than maxtmpfiles temporary
+		// files, better run
+		// out of memory first.
+		long blocksize = sizeoffile / maxtmpfiles
+				+ (sizeoffile % maxtmpfiles == 0 ? 0 : 1);
+
+		// on the other hand, we don't want to create many temporary
+		// files
+		// for naught. If blocksize is smaller than half the free
+		// memory, grow it.
+		if (blocksize < maxMemory / 2) {
+			blocksize = maxMemory / 2;
+		}
+		return blocksize;
+	}
+
+	private String empty = "";
+
+	private ArrayList<Scanner> getScanners(ArrayList<File> allFiles) throws FileNotFoundException{
+		ArrayList<Scanner> scanners = new ArrayList<Scanner>();
+		//		System.out.println("Size of ALL FILES" + allFiles);
+		for(File f : allFiles){
+			if(f!=null) {
+				Scanner sc = new Scanner(f);
+				scanners.add(sc);
+			}
+		}
+		return scanners;
+	}
+
+	private void closeScanners(ArrayList<Scanner> scanners){
+		for(Scanner sc : scanners){
+			sc.close();
+		}
+	}
+
+	private int getMin(String[] values){
+		//		Comparator comp = new Heap();
+		String min = empty;
+		int minindex = -1;
+		int index = 0;
+		//		System.out.println(values);
+		//		for (String s: values) {
+		//			System.out.println(s);
+		//		}
+		for(String value : values){
+			if(!value.equals(empty) && value!= null){
+				if(c.compare(value,min) < 0 || min.equals(empty)){
+					min = value;
+					minindex = index;
+				}
+			}
+			index++;
+		}
+
+		return minindex;
+	}
+
+	private String[] getValues(ArrayList<Scanner> scanners){
+		String[] values = new String[scanners.size()];
+
+		for(int i=0;i<scanners.size();i++){
+			if(scanners.get(i).hasNextLine()){
+				values[i] = scanners.get(i).nextLine();
+			}else{
+				values[i] = empty;
+			}
+		}
+
+		return values;
+	}
+
+	private void updateValues(String[] values, int index, ArrayList<Scanner> scanners){
+		if(scanners.get(index).hasNextLine()){
+			values[index] = scanners.get(index).nextLine();
+		} else{
+			values[index] = empty;
+		}
+	}
+
+	private void merger(ArrayList<File> allFiles, File outputfile) throws IOException {
+
+		//		System.out.println("Called");
+		ArrayList<Scanner> scanners = getScanners(allFiles);
+		String[] values = getValues(scanners);
+
+		PrintWriter out = new PrintWriter(outputfile);
+		//		System.out.println("started");
+		int index = getMin(values);
+		//		System.out.println("1st index "+index );
+		while(index!=-1){
+			//			System.out.println(index);
+			//			System.out.println("wrote " + values[index]);
+			out.println(values[index]);			
+			updateValues(values, index, scanners);
+			index = getMin(values);
+		}
+
+		closeScanners(scanners);
+		out.close();
+
+	}
+
+
+	/**
+	 * Default maximal number of temporary files allowed.
+	 */
+	public static final int DEFAULTMAXTEMPFILES = 1024;
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {

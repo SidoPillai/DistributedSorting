@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.PriorityQueue;
 
 public class SlaveTask1 {
 
@@ -21,14 +20,14 @@ public class SlaveTask1 {
 	ArrayList<String> sortedList;
 	
 	static Comparator<String> comp;
-	static PriorityQueue<String> prq;
+//	static PriorityQueue<String> prq;
 
 	// Constructor
 	public SlaveTask1(String serverAddress, int serverPort) {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 		comp = new Heap();
-		prq = new PriorityQueue<String>(10,comp);
+//		prq = new PriorityQueue<String>(10,comp);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -64,25 +63,25 @@ public class SlaveTask1 {
 		}
 	}
 	
-	// Sorting of the list takes place here
-	public static ArrayList<String> sortList(ArrayList<String>inputList) {
-			
-		int size = inputList.size();
-		int j = 0;
-		for(int i = 0; i < size; i++) {
-			prq.add(inputList.get(i));
-		}
-		
-		while(!prq.isEmpty()) {
-			inputList.set(j, prq.poll());
-			j++;
-		}
-		return inputList;
-	}
+//	// Sorting of the list takes place here
+//	public static ArrayList<String> sortList(ArrayList<String>inputList) {
+//			
+//		int size = inputList.size();
+//		int j = 0;
+//		for(int i = 0; i < size; i++) {
+//			prq.add(inputList.get(i));
+//		}
+//		
+//		while(!prq.isEmpty()) {
+//			inputList.set(j, prq.poll());
+//			j++;
+//		}
+//		return inputList;
+//	}
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException {
-		new SlaveTask1("10.10.10.105", 6000).start();
+		new SlaveTask1("localhost", 6000).start();
 	}
 	
 }

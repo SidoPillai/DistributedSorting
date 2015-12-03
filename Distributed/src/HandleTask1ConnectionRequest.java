@@ -81,6 +81,10 @@ public class HandleTask1ConnectionRequest extends Thread{
 				// add the sorted data in the list of files
 				try {
 					master.files.add(master.manageSortedArrays(sortedData));
+					System.out.println("Number of files " + master.files.size());
+					if(master.files.size() == master.noOfChunks) {
+						master.lock = true;
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -91,8 +95,6 @@ public class HandleTask1ConnectionRequest extends Thread{
 	// In-place sort if an exception occurs
 	private ArrayList<String> inPlaceSort(ArrayList<String> list) {
 		Collections.sort(list, comp);
-//		Comparator<String> comp = new Heap();
-//		Collections.sort(list, comp);
 		return list;
 	}
 }

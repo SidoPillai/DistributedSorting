@@ -1,8 +1,6 @@
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,7 +18,7 @@ public class SlaveTask1 {
 	ArrayList<String> sortedList;
 	
 	static Comparator<String> comp;
-	QuickSort qsort = new QuickSort();
+//	QuickSort qsort = new QuickSort();
 
 	// Constructor
 	public SlaveTask1(String serverAddress, int serverPort) {

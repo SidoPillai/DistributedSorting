@@ -60,6 +60,11 @@ public class Master {
 	List<List<String>> chunks = new ArrayList<List<String>>();
 	List<List<String>> sortedChunks = new ArrayList<List<String>>();
 
+	volatile boolean lock = false;
+	long noOfLines;
+	int noOfChunks = 4;
+	int chunksize;
+	
 	// Constructor
 	public Master() {
 		listOfSlaves = new ArrayList<Socket>();
@@ -83,9 +88,9 @@ public class Master {
 			// start pinging once all the nodes are connected
 			//			new Ping().start();
 
-			long noOfLines = countLines("new_dataset_1M.txt");
-			int noOfChunks = 100;
-			int chunksize = (int) noOfLines/noOfChunks;
+			noOfLines = countLines("new_dataset_1M.txt");
+			
+			chunksize = (int) noOfLines/noOfChunks;
 
 			System.out.println("Number of lines in the file " + noOfLines);
 			System.out.println("Number of chunks " + noOfChunks);
@@ -120,15 +125,20 @@ public class Master {
 			System.out.println("Before Merging " + (System.currentTimeMillis()-start)/1000 + " seconds");
 
 			System.out.println("------ MERGING SORTED FILES ------");
-			Thread.sleep(500);
+//			Thread.sleep(10000);
 			// File Merging
-			mergeSortedFiles(files, new File("lalala.txt"));
-//			merger(files, new File("lalalulu.txt"));
+			while(true) {
+				if (this.lock) {
+//					merger(files, new File("hello-world.txt"));
+					mergeSortedFiles(files, new File("output.txt"));
+					break;
+				}
+			}
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			// Done
 			System.out.println("-------------- DONE --------------");
 			// Quiting the program
-			System.exit(0);
+//			System.exit(0);
 
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
@@ -164,7 +174,7 @@ public class Master {
 			new Ping().start();
 
 			long noOfLines = countLines("new_dataset_10000.txt");
-			int noOfChunks = 1000;
+			int noOfChunks = 10;
 			int chunksize = (int) noOfLines/noOfChunks;
 
 			System.out.println("Number of lines in the file " + noOfLines);
@@ -202,7 +212,7 @@ public class Master {
 			System.out.println("Total Computing time " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			// Done
 			System.out.println("-------------- DONE --------------");
-			System.exit(0);
+//			System.exit(0);
 		} catch(IOException e){
 			System.out.println("Something went wrong while connecting to a client");
 			return;
@@ -538,7 +548,8 @@ public class Master {
 		PrintWriter out = new PrintWriter(outputfile);
 		int index = getMin(values);
 		while(index!=-1){
-			out.println(values[index]);			
+			out.println(values[index]);	
+			out.flush();
 			updateValues(values, index, scanners);
 			index = getMin(values);
 		}
@@ -552,7 +563,7 @@ public class Master {
 	/**
 	 * Default maximal number of temporary files allowed.
 	 */
-	public static final int DEFAULTMAXTEMPFILES = 1024;
+//	public static final int DEFAULTMAXTEMPFILES = 1024;
 
 	// Main method
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {

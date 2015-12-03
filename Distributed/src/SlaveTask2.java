@@ -2,7 +2,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -19,7 +18,7 @@ public class SlaveTask2 {
 	// Sum Map
 	HashMap<String, Integer> sum_map = new HashMap<String, Integer>();
 
-	// prefix occurencesmap
+	// prefix occurrences map
 	HashMap<String, Integer> count_map = new HashMap<String, Integer>();
 
 	// Constructor
@@ -81,17 +80,16 @@ public class SlaveTask2 {
 
 			}
 
-		} catch (UnknownHostException e) {
-			//			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
+			System.out.println("Some Exception " + e.getMessage());
 			//			e.printStackTrace();
 		} finally {
-			try {
-				socket.close();
-				System.exit(0);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+//			try {
+//				socket.close();
+//				System.exit(0);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 		}
 	}
 
